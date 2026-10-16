@@ -1,0 +1,51 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Folder Include="Forms\Auth\" />
+    <Folder Include="Forms\Expenses\" />
+    <Folder Include="Forms\Reports\" />
+    <Folder Include="Forms\Orders\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Eml.ExplicitDispose.Api" Version="2.2.0.1" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.13" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+	
+	<ItemGroup>
+  <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.0" />
+  <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0" />
+</ItemGroup>
+
+<ItemGroup>
+  <ProjectReference Include="..\ClothStock.Models\ClothStock.Models.csproj" />
+  <ProjectReference Include="..\ClothStock.Business\ClothStock.Business.csproj" />
+  <ProjectReference Include="..\ClothStock.Data\ClothStock.Data.csproj" />
+</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.0" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\ClothStock.Models\ClothStock.Models.csproj" />
+		<ProjectReference Include="..\ClothStock.Business\ClothStock.Business.csproj" />
+		<ProjectReference Include="..\ClothStock.Data\ClothStock.Data.csproj" />
+	</ItemGroup>
+	
+
+</Project>

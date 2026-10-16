@@ -1,0 +1,117 @@
+Folder PATH listing for volume New Volume
+Volume serial number is 644C-C989
+E:.
+|   ClothStockSystem.slnx
+|   files.txt
+|   structure.txt
+|   
+\---ClothStockSystem
+    |   appsettings.json
+    |   ClothStockSystem.csproj
+    |   ClothStockSystem.csproj.user
+    |   Program.cs
+    |   
+    +---Base
+    |       BaseForm.cs
+    |       BaseForm.Designer.cs
+    |       BaseForm.resx
+    |       
+    +---bin
+    |   \---Debug
+    |       \---net10.0-windows
+    |               appsettings.json
+    |               ClothStockSystem.deps.json
+    |               ClothStockSystem.dll
+    |               ClothStockSystem.exe
+    |               ClothStockSystem.pdb
+    |               ClothStockSystem.runtimeconfig.json
+    |               
+    +---Controls
+    |       ArticleColorPicker.cs
+    |       ArticleColorPicker.Designer.cs
+    |       ArticleColorPicker.resx
+    |       BatchPicker.cs
+    |       BatchPicker.Designer.cs
+    |       BatchPicker.resx
+    |       MeterSuitDisplay.cs
+    |       MeterSuitDisplay.Designer.cs
+    |       MeterSuitDisplay.resx
+    |       
+    +---Froms
+    |   +---Auth
+    |   +---Expenses
+    |   +---Main
+    |   |       MainForm.cs
+    |   |       MainForm.Designer.cs
+    |   |       MainForm.resx
+    |   |       
+    |   +---Orders
+    |   +---Reports
+    |   +---Settings
+    |   |       SettingsForm.cs
+    |   |       SettingsForm.Designer.cs
+    |   |       SettingsForm.resx
+    |   |       
+    |   \---Stock
+    |           ArticleForm.cs
+    |           ArticleForm.Designer.cs
+    |           ArticleForm.resx
+    |           ColorForm.cs
+    |           ColorForm.Designer.cs
+    |           ColorForm.resx
+    |           StockAdjustForm.cs
+    |           StockAdjustForm.Designer.cs
+    |           StockAdjustForm.resx
+    |           StockInForm.cs
+    |           StockInForm.Designer.cs
+    |           StockInForm.resx
+    |           StockViewForm.cs
+    |           StockViewForm.Designer.cs
+    |           StockViewForm.resx
+    |           
+    +---Helpers
+    |       MessageHelper.cs
+    |       SessionManager.cs
+    |       
+    \---obj
+        |   ClothStockSystem.csproj.nuget.dgspec.json
+        |   ClothStockSystem.csproj.nuget.g.props
+        |   ClothStockSystem.csproj.nuget.g.targets
+        |   project.assets.json
+        |   project.nuget.cache
+        |   
+        \---Debug
+            \---net10.0-windows
+                |   .NETCoreApp,Version=v10.0.AssemblyAttributes.cs
+                |   apphost.exe
+                |   ClothStockSystem.AssemblyInfo.cs
+                |   ClothStockSystem.AssemblyInfoInputs.cache
+                |   ClothStockSystem.assets.cache
+                |   ClothStockSystem.Base.BaseForm.resources
+                |   ClothStockSystem.Controls.ArticleColorPicker.resources
+                |   ClothStockSystem.Controls.BatchPicker.resources
+                |   ClothStockSystem.Controls.MeterSuitDisplay.resources
+                |   ClothStockSystem.csproj.CoreCompileInputs.cache
+                |   ClothStockSystem.csproj.FileListAbsolute.txt
+                |   ClothStockSystem.csproj.GenerateResource.cache
+                |   ClothStockSystem.designer.deps.json
+                |   ClothStockSystem.designer.runtimeconfig.json
+                |   ClothStockSystem.dll
+                |   ClothStockSystem.Froms.Settings.SettingsForm.resources
+                |   ClothStockSystem.Froms.Stock.ArticleForm.resources
+                |   ClothStockSystem.Froms.Stock.ColorForm.resources
+                |   ClothStockSystem.Froms.Stock.StockAdjustForm.resources
+                |   ClothStockSystem.Froms.Stock.StockInForm.resources
+                |   ClothStockSystem.Froms.Stock.StockViewForm.resources
+                |   ClothStockSystem.GeneratedMSBuildEditorConfig.editorconfig
+                |   ClothStockSystem.genruntimeconfig.cache
+                |   ClothStockSystem.GlobalUsings.g.cs
+                |   ClothStockSystem.MainForm.resources
+                |   ClothStockSystem.pdb
+                |   
+                +---ref
+                |       ClothStockSystem.dll
+                |       
+                \---refint
+                        ClothStockSystem.dll
+                        

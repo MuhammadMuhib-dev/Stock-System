@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="ClothStock.Business/ClothStock.Business.csproj" />
+  <Project Path="ClothStock.Data/ClothStock.Data.csproj" />
+  <Project Path="ClothStock.Models/ClothStock.Models.csproj" />
+  <Project Path="ClothStockSystem/ClothStockSystem.csproj" />
+</Solution>
