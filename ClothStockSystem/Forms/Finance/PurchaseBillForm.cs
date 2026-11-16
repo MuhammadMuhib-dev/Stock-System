@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using System.Diagnostics;
 using ClothStock.Business.Services;
 using ClothStock.Models.Finance;
 using ClothStock.Models.Stock;
@@ -10,6 +11,9 @@ namespace ClothStockSystem.Forms.Finance;
 public class PurchaseBillForm : Form
 {
     private static string CurrentUser => SessionManager.Username;
+
+    // PDF par jo shop ka naam chhapega, yahan apni shop ka naam likhein
+    private const string ShopName = "Meri Shop";
 
     private readonly FinanceService _fin;
     private readonly ArticleService _articles;
@@ -163,7 +167,7 @@ public class PurchaseBillForm : Form
         foreach (var (c, t) in new[] { ("Article", "Article"), ("Color", "Color"), ("Bunches", "Bunches"), ("SuitsPerBunch", "Suits/bunch"),
                                        ("MetersPerSuit", "Meter/suit"), ("CostPerSuit", "Cost/suit"), ("Suits", "Kul suits"),
                                        ("Meters", "Kul meter"), ("LineTotal", "Line total") })
-            if (_grid.Columns.Contains(t == "" ? c : c)) _grid.Columns[c]!.HeaderText = t;
+            if (_grid.Columns.Contains(c)) _grid.Columns[c]!.HeaderText = t;
         if (_grid.Columns.Contains("ColorId")) _grid.Columns["ColorId"]!.Visible = false;
         foreach (var c in new[] { "CostPerSuit", "LineTotal" })
             if (_grid.Columns.Contains(c)) { _grid.Columns[c]!.DefaultCellStyle.Format = "N0"; _grid.Columns[c]!.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight; }
@@ -245,6 +249,9 @@ public class PurchaseBillForm : Form
         try
         {
             if (_sup.SelectedValue is not int sid) { MessageBox.Show("Supplier chunen.", "Check"); return; }
+            if (_lines.Count == 0) { MessageBox.Show("Bill mein kam az kam ek line add karein.", "Check"); return; }
+            if (_paid.Value > Total) { MessageBox.Show("Diya hua amount bill total se zyada hai.", "Check"); return; }
+
             var req = new PurchaseBillRequest
             {
                 SupplierId = sid,
@@ -274,8 +281,49 @@ public class PurchaseBillForm : Form
             if (MessageBox.Show(msg, "Confirm", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes) return;
 
             _save.Enabled = false;
-            await _fin.PurchaseStockInAsync(req);
+            var voucherId = await _fin.PurchaseStockInAsync(req);
+
+            // PDF ka data lines clear hone se PEHLE bana lein
+            var pdfData = new PurchaseVoucherPdfData
+            {
+                ShopName = ShopName,
+                VoucherNo = $"PV-{voucherId:00000}",
+                VoucherDate = DateTime.Now,
+                Supplier = _sup.Text,
+                InvoiceNo = req.InvoiceNo,
+                InvoiceDate = req.InvoiceDate,
+                DueDate = req.DueDate,
+                Notes = req.Notes,
+                User = CurrentUser,
+                Total = req.Total,
+                Paid = req.PaidNow,
+                PaidFrom = $"{_method.Text} ({_acc.Text})",
+                Lines = _lines.Select(l => new PurchaseVoucherPdfLine
+                {
+                    Article = l.Article,
+                    Color = l.Color,
+                    Bunches = l.Bunches,
+                    SuitsPerBunch = l.SuitsPerBunch,
+                    MetersPerSuit = l.MetersPerSuit,
+                    CostPerSuit = l.CostPerSuit
+                }).ToList()
+            };
+
             MessageBox.Show("Bill aur stock save ho gaya.", "Done", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+            // PDF banao aur kholo (wahan se Ctrl+P se print ho jayega)
+            try
+            {
+                var folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Vouchers");
+                Directory.CreateDirectory(folder);
+                var filePath = Path.Combine(folder, $"{pdfData.VoucherNo}.pdf");
+                PurchaseVoucherPdf.Create(filePath, pdfData);
+                Process.Start(new ProcessStartInfo(filePath) { UseShellExecute = true });
+            }
+            catch (Exception pdfEx)
+            {
+                MessageBox.Show("Bill save ho gaya, lekin PDF nahi bani: " + pdfEx.Message, "PDF error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
 
             _lines.Clear(); _no.Clear(); _notes.Clear(); _paid.Value = 0;
             _key = Guid.NewGuid().ToString("N");
@@ -284,4 +332,5 @@ public class PurchaseBillForm : Form
         catch (Exception ex) { MessageBox.Show(ex.Message, "Bill save nahi hua", MessageBoxButtons.OK, MessageBoxIcon.Warning); }
         finally { _save.Enabled = true; }
     }
+
 }

@@ -246,6 +246,16 @@ public class FinanceRepository : IFinanceRepository
         await db.ExecuteAsync("dbo.usp_PurchaseStockIn", p, commandType: CommandType.StoredProcedure);
         return p.Get<int>("@NewInvoiceId");
     }
+
+    public async Task<PurchaseVoucherInfo?> GetPurchaseVoucherAsync(int invoiceId)
+    {
+        using var db = _factory.Create();
+        return await db.QueryFirstOrDefaultAsync<PurchaseVoucherInfo>(
+            @"SELECT VoucherId, VoucherNo, VoucherDate, TotalAmount, PaidAmount
+              FROM dbo.Vouchers
+              WHERE VoucherType = 'Purchase' AND PurchaseInvoiceId = @Id",
+            new { Id = invoiceId });
+    }
     public async Task<IEnumerable<CodPending>> GetCodPendingAsync()
     {
         using var db = _factory.Create();

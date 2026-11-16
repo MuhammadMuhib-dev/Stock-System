@@ -206,6 +206,8 @@ public class FinanceService
         catch (Exception ex) when (ex.Message.Contains("UQ_PurchaseInvoices", StringComparison.OrdinalIgnoreCase))
         { throw new InvalidOperationException("Is supplier ka ye bill number pehle se maujood hai."); }
     }
+    public Task<PurchaseVoucherInfo?> GetPurchaseVoucherAsync(int invoiceId) => _repo.GetPurchaseVoucherAsync(invoiceId);
+
     public Task<IEnumerable<CodPending>> GetCodPendingAsync() => _repo.GetCodPendingAsync();
 
     public Task<int> CodRemitAsync(List<int> orderIds, decimal amount, int accountId, string method,
