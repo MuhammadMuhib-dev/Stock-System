@@ -1,5 +1,6 @@
 ﻿using ClothStock.Business.Services;
 using ClothStock.Models.Stock;
+using ClothStockSystem.Forms.Common;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ClothStockSystem.Forms.Stock;
@@ -39,7 +40,7 @@ public partial class StockInForm : Form
         catch (Exception ex)
         {
             _loading = false;
-            MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            AppDialog.Error(this, ex.Message, "Form load nahi hua");
         }
     }
 
@@ -74,7 +75,7 @@ public partial class StockInForm : Form
         }
         catch (Exception ex)
         {
-            MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            AppDialog.Error(this, ex.Message, "Colors load nahi hue");
         }
         finally
         {
@@ -132,7 +133,7 @@ public partial class StockInForm : Form
         }
         catch (Exception ex)
         {
-            MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            AppDialog.Error(this, ex.Message, "Batches load nahi hue");
         }
     }
 
@@ -194,8 +195,7 @@ public partial class StockInForm : Form
 
                 btnSave.Enabled = false;
                 await _stock.UpdateBatchAsync(upd);
-                MessageBox.Show("Batch update ho gaya.", "Done",
-                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+                AppDialog.Success(this, "Batch kamyabi se update ho gaya.", "Batch Updated");
                 ClearInputs();
                 await LoadBatchesAsync();
                 return;
@@ -215,28 +215,34 @@ public partial class StockInForm : Form
 
             var p = _stock.Preview(request.BunchesReceived, request.SuitsPerBunch, request.MetersPerSuit);
 
-            var confirm = MessageBox.Show(
-                $"{cmbArticle.Text} - {cmbColor.Text}\n\n" +
-                $"Total meter: {p.TotalMeters:0.###}\n" +
-                $"Total suits: {p.TotalSuits:N0}\n" +
-                $"Cost per suit: {request.CostPricePerSuit:N2}\n\n" +
+            var confirmed = AppDialog.Confirm(
+                this,
                 "Stock save karna hai?",
-                "Confirm", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                "Neeche di gayi details check kar lein.",
+                new[]
+                {
+                    ("Article", cmbArticle.Text),
+                    ("Color", cmbColor.Text),
+                    ("Total meter", p.TotalMeters.ToString("0.###")),
+                    ("Total suits", p.TotalSuits.ToString("N0")),
+                    ("Cost per suit", request.CostPricePerSuit.ToString("N2"))
+                },
+                yesText: "Save Stock",
+                noText: "Wapis");
 
-            if (confirm != DialogResult.Yes) return;
+            if (!confirmed) return;
 
             btnSave.Enabled = false;
             await _stock.StockInAsync(request);
 
-            MessageBox.Show("Stock save ho gaya.", "Done",
-                MessageBoxButtons.OK, MessageBoxIcon.Information);
+            AppDialog.Success(this, "Naya stock kamyabi se save ho gaya.", "Stock Saved");
 
             ClearInputs();
             await LoadBatchesAsync();
         }
         catch (Exception ex)
         {
-            MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            AppDialog.Warning(this, ex.Message, "Save nahi ho saka");
         }
         finally
         {
@@ -248,34 +254,38 @@ public partial class StockInForm : Form
     {
         if (grid.CurrentRow?.DataBoundItem is not StockBatchView b)
         {
-            MessageBox.Show("Please select a batch from the list to delete.", "Check",
-                MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            AppDialog.Warning(this, "Delete karne ke liye pehle list se koi batch select karein.", "Batch select karein");
             return;
         }
 
-        var confirm = MessageBox.Show(
-            $"Delete batch '{b.BatchNo}'?\n\n" +
-            $"Received: {b.ReceivedDate:dd-MMM-yyyy}\n" +
-            $"Meters: {b.MetersRemaining:0.###}\n" +
-            $"Suits: {b.SuitsRemaining:N0}\n\n" +
-            "This cannot be undone.",
-            "Confirm Delete", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+        var confirmed = AppDialog.Confirm(
+            this,
+            "Batch delete karna hai?",
+            "Ye amal wapis nahi ho sakta.",
+            new[]
+            {
+                ("Batch No", b.BatchNo),
+                ("Received", b.ReceivedDate.ToString("dd-MMM-yyyy")),
+                ("Meters remaining", b.MetersRemaining.ToString("0.###")),
+                ("Suits remaining", b.SuitsRemaining.ToString("N0"))
+            },
+            yesText: "Delete",
+            noText: "Cancel",
+            danger: true);
 
-        if (confirm != DialogResult.Yes) return;
+        if (!confirmed) return;
 
         try
         {
             btnDelete.Enabled = false;
             await _stock.DeleteBatchAsync(b.BatchId);
 
-            MessageBox.Show("Batch deleted.", "Done",
-                MessageBoxButtons.OK, MessageBoxIcon.Information);
+            AppDialog.Success(this, "Batch delete ho gaya.", "Batch Deleted");
             await LoadBatchesAsync();
         }
         catch (Exception ex)
         {
-            MessageBox.Show(ex.Message, "Could not delete",
-                MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            AppDialog.Warning(this, ex.Message, "Delete nahi ho saka");
         }
         finally
         {
@@ -287,8 +297,7 @@ public partial class StockInForm : Form
     {
         if (grid.CurrentRow?.DataBoundItem is not StockBatchView b)
         {
-            MessageBox.Show("Please select a batch from the list to edit.", "Check",
-                MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            AppDialog.Warning(this, "Edit karne ke liye pehle list se koi batch select karein.", "Batch select karein");
             return;
         }
 
@@ -311,7 +320,7 @@ public partial class StockInForm : Form
         }
         catch (Exception ex)
         {
-            MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            AppDialog.Error(this, ex.Message, "Batch load nahi hua");
         }
     }
 
