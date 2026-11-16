@@ -76,4 +76,32 @@ public class StockRepository : IStockRepository
             new { BatchId = batchId },
             commandType: CommandType.StoredProcedure);
     }
+
+    public async Task<StockBatch?> GetBatchByIdAsync(int batchId)
+    {
+        using var db = _factory.Create();
+        return await db.QueryFirstOrDefaultAsync<StockBatch>(
+            @"SELECT BatchId, BatchNo, ColorId, ReceivedDate, Supplier, BunchesReceived,
+                     SuitsPerBunch, MetersPerSuit, CostPricePerSuit, MetersRemaining, Notes
+              FROM dbo.StockBatches WHERE BatchId = @BatchId",
+            new { BatchId = batchId });
+    }
+
+    public async Task UpdateBatchAsync(StockUpdateRequest r)
+    {
+        using var db = _factory.Create();
+        await db.ExecuteAsync("dbo.usp_StockUpdateBatch",
+            new
+            {
+                r.BatchId,
+                ReceivedDate = r.ReceivedDate.Date,
+                r.BunchesReceived,
+                r.SuitsPerBunch,
+                r.MetersPerSuit,
+                r.CostPricePerSuit,
+                r.Supplier,
+                r.Notes
+            },
+            commandType: CommandType.StoredProcedure);
+    }
 }

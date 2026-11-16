@@ -95,7 +95,7 @@ public partial class ColorForm : Form
         {
             if (SelectedArticleId == 0)
             {
-                MessageBox.Show("Pehle article select karein.", "Check",
+                MessageBox.Show("Please select an article first.", "Check",
                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
@@ -118,7 +118,7 @@ public partial class ColorForm : Form
         catch (Exception ex)
         {
             var msg = ex.Message.Contains("UNIQUE", StringComparison.OrdinalIgnoreCase)
-                ? "Ye color is article mein pehle se maujood hai."
+                ? "This color already exists in this article."
                 : ex.Message;
             MessageBox.Show(msg, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
@@ -134,12 +134,12 @@ public partial class ColorForm : Form
     {
         if (_currentColorId == 0)
         {
-            MessageBox.Show("Pehle list se color select karein.", "Check",
+            MessageBox.Show("Please select a color from the list first.", "Check",
                 MessageBoxButtons.OK, MessageBoxIcon.Warning);
             return;
         }
 
-        var confirm = MessageBox.Show($"Color '{txtColor.Text}' delete karna hai?",
+        var confirm = MessageBox.Show($"Delete color '{txtColor.Text}'?",
             "Delete confirm", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
         if (confirm != DialogResult.Yes) return;
 
@@ -154,7 +154,7 @@ public partial class ColorForm : Form
         }
         catch (Exception ex)
         {
-            MessageBox.Show(ex.Message, "Delete nahi ho saka",
+            MessageBox.Show(ex.Message, "Could not delete",
                 MessageBoxButtons.OK, MessageBoxIcon.Warning);
         }
         finally

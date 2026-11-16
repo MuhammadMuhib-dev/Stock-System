@@ -25,21 +25,21 @@ public class StockService
 
     public async Task<int> StockInAsync(StockInRequest r)
     {
-        if (r.ColorId <= 0) throw new InvalidOperationException("Color select karein.");
-        if (r.BunchesReceived <= 0) throw new InvalidOperationException("Bunches 0 se zyada hon.");
-        if (r.SuitsPerBunch <= 0) throw new InvalidOperationException("Suits per bunch 0 se zyada hon.");
-        if (r.MetersPerSuit <= 0) throw new InvalidOperationException("Meter per suit 0 se zyada hon.");
-        if (r.CostPricePerSuit < 0) throw new InvalidOperationException("Cost price minus nahi ho sakti.");
+        if (r.ColorId <= 0) throw new InvalidOperationException("Please select a color.");
+        if (r.BunchesReceived <= 0) throw new InvalidOperationException("Bunches must be greater than 0.");
+        if (r.SuitsPerBunch <= 0) throw new InvalidOperationException("Suits per bunch must be greater than 0.");
+        if (r.MetersPerSuit <= 0) throw new InvalidOperationException("Meters per suit must be greater than 0.");
+        if (r.CostPricePerSuit < 0) throw new InvalidOperationException("Cost price cannot be negative.");
         if (r.ReceivedDate.Date > DateTime.Today)
-            throw new InvalidOperationException("Received date aane wali tareekh nahi ho sakti.");
+            throw new InvalidOperationException("Received date cannot be in the future.");
 
         return await _stockRepo.StockInAsync(r);
     }
 
     public Task AdjustAsync(int batchId, decimal metersChange, string movementType, string? note)
     {
-        if (batchId <= 0) throw new InvalidOperationException("Batch select karein.");
-        if (metersChange == 0) throw new InvalidOperationException("Meter zero nahi ho sakte.");
+        if (batchId <= 0) throw new InvalidOperationException("Please select a batch.");
+        if (metersChange == 0) throw new InvalidOperationException("Meters cannot be zero.");
         return _stockRepo.AdjustAsync(batchId, metersChange, movementType, note);
     }
 
@@ -57,7 +57,25 @@ public class StockService
 
     public Task DeleteBatchAsync(int batchId)
     {
-        if (batchId <= 0) throw new InvalidOperationException("Pehle list se batch select karein.");
+        if (batchId <= 0) throw new InvalidOperationException("Please select a batch from the list first.");
         return _stockRepo.DeleteBatchAsync(batchId);
     }
+
+    public Task<StockBatch?> GetBatchByIdAsync(int batchId) => _stockRepo.GetBatchByIdAsync(batchId);
+
+    public Task UpdateBatchAsync(StockUpdateRequest r)
+    {
+        if (r.BatchId <= 0) throw new InvalidOperationException("Please select a batch.");
+        if (r.BunchesReceived <= 0) throw new InvalidOperationException("Bunches must be greater than 0.");
+        if (r.SuitsPerBunch <= 0) throw new InvalidOperationException("Suits per bunch must be greater than 0.");
+        if (r.MetersPerSuit <= 0) throw new InvalidOperationException("Meters per suit must be greater than 0.");
+        if (r.CostPricePerSuit < 0) throw new InvalidOperationException("Cost price cannot be negative.");
+        if (r.ReceivedDate.Date > DateTime.Today)
+            throw new InvalidOperationException("Received date cannot be in the future.");
+        return _stockRepo.UpdateBatchAsync(r);
+    }
+
+    // Edit/Delete ke liye: is color ke sab batches (khali bhi)
+    public async Task<IEnumerable<StockBatchView>> GetAllBatchesForColorAsync(int colorId)
+        => await _stockRepo.GetBatchesAsync(colorId, onlyAvailable: false);
 }

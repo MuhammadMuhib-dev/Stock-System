@@ -1,4 +1,5 @@
-﻿using ClothStock.Data.Interfaces;
+﻿
+using ClothStock.Data.Interfaces;
 using ClothStock.Models.Stock;
 
 namespace ClothStock.Business.Services;
@@ -22,9 +23,14 @@ public class ArticleService
         a.ArticleNumber = a.ArticleNumber.Trim();
         a.ArticleName = a.ArticleName.Trim();
 
-        if (a.ArticleNumber.Length == 0) throw new InvalidOperationException("Article number likhein.");
-        if (a.ArticleName.Length == 0) throw new InvalidOperationException("Article ka naam likhein.");
-        if (a.SellingPrice < 0) throw new InvalidOperationException("Selling price minus nahi ho sakti.");
+        if (a.ArticleNumber.Length == 0)
+            throw new InvalidOperationException("Please enter an article number.");
+
+        if (a.ArticleName.Length == 0)
+            throw new InvalidOperationException("Please enter an article name.");
+
+        if (a.SellingPrice < 0)
+            throw new InvalidOperationException("Selling price cannot be negative.");
 
         if (a.ArticleId == 0)
             return await _articles.AddAsync(a);
@@ -39,8 +45,12 @@ public class ArticleService
     public async Task<int> SaveColorAsync(Color c)
     {
         c.ColorName = c.ColorName.Trim();
-        if (c.ArticleId <= 0) throw new InvalidOperationException("Pehle article select karein.");
-        if (c.ColorName.Length == 0) throw new InvalidOperationException("Color ka naam likhein.");
+
+        if (c.ArticleId <= 0)
+            throw new InvalidOperationException("Please select an article first.");
+
+        if (c.ColorName.Length == 0)
+            throw new InvalidOperationException("Please enter a color name.");
 
         if (c.ColorId == 0)
             return await _colors.AddAsync(c);
@@ -52,12 +62,12 @@ public class ArticleService
     public async Task DeleteArticleAsync(int articleId)
     {
         if (articleId <= 0)
-            throw new InvalidOperationException("Pehle list se article select karein.");
+            throw new InvalidOperationException("Please select an article from the list first.");
 
         if (await _articles.HasColorsAsync(articleId))
             throw new InvalidOperationException(
-                "Is article ke colors ya stock maujood hain, is liye delete nahi ho sakta.\n" +
-                "Isay list se hatane ke liye Active ka tick hata kar Save karein.");
+                "This article has associated colors or stock and cannot be deleted.\n" +
+                "To hide it from the list, uncheck Active and click Save.");
 
         await _articles.DeleteAsync(articleId);
     }
@@ -65,12 +75,12 @@ public class ArticleService
     public async Task DeleteColorAsync(int colorId)
     {
         if (colorId <= 0)
-            throw new InvalidOperationException("Pehle list se color select karein.");
+            throw new InvalidOperationException("Please select a color from the list first.");
 
         if (await _colors.HasBatchesAsync(colorId))
             throw new InvalidOperationException(
-                "Is color ka stock maujood hai, is liye delete nahi ho sakta.\n" +
-                "Isay chhupane ke liye Active ka tick hata kar Save karein.");
+                "This color has associated stock and cannot be deleted.\n" +
+                "To hide it from the list, uncheck Active and click Save.");
 
         await _colors.DeleteAsync(colorId);
     }

@@ -1,5 +1,6 @@
 ﻿using ClothStock.Business.Services;
 using ClothStock.Models.Stock;
+using ClothStockSystem.Helpers;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ClothStockSystem.Forms.Stock;
@@ -67,11 +68,7 @@ public partial class StockViewForm : Form
 
     private async void btnRefresh_Click(object? sender, EventArgs e) => await LoadGridAsync();
 
-    private async void tmrRefresh_Tick(object? sender, EventArgs e)
-    {
-        // Agar user ne kuch select kiya hua hai to refresh se uski selection na hile
-        await LoadGridAsync();
-    }
+    private async void tmrRefresh_Tick(object? sender, EventArgs e) => await LoadGridAsync();
 
     private async Task LoadGridAsync()
     {
@@ -118,7 +115,11 @@ public partial class StockViewForm : Form
 
         lblSummary.Text =
             $"Colors: {list.Count:N0}   |   Total Suits: {list.Sum(x => x.SuitsRemaining):N0}   |   " +
-            $"Total Meter: {list.Sum(x => x.MetersRemaining):0.###}   |   Stock Value: {list.Sum(x => x.StockValue):N0}";
+            $"Total Meter: {list.Sum(x => x.MetersRemaining):0.###}" +
+            (SessionManager.CanSeeCost ? $"   |   Stock Value: {list.Sum(x => x.StockValue):N0}" : "");
+
+        // Seller ko cost / value nahi dikhni chahiye
+        if (!SessionManager.CanSeeCost) Hide("StockValue");
     }
 
     private async Task ShowBatchWiseAsync(int? articleId, bool alertsOnly)
@@ -130,7 +131,7 @@ public partial class StockViewForm : Form
         grid.DataSource = list;
 
         Hide("ArticleId", "ArticleNumber", "ColorId", "BatchId", "Supplier",
-             "TotalMetersReceived", "IsOldStock");
+             "TotalMetersReceived", "IsOldStock", "SuitsPerBunch");
         Header("ArticleName", "Article");
         Header("ColorName", "Color");
         Header("BatchNo", "Batch No");
@@ -151,7 +152,10 @@ public partial class StockViewForm : Form
 
         lblSummary.Text =
             $"Batches: {list.Count:N0}   |   Total Suits: {list.Sum(x => x.SuitsRemaining):N0}   |   " +
-            $"Total Meter: {list.Sum(x => x.MetersRemaining):0.###}   |   Stock Value: {list.Sum(x => x.StockValue):N0}";
+            $"Total Meter: {list.Sum(x => x.MetersRemaining):0.###}" +
+            (SessionManager.CanSeeCost ? $"   |   Stock Value: {list.Sum(x => x.StockValue):N0}" : "");
+
+        if (!SessionManager.CanSeeCost) Hide("StockValue", "CostPricePerSuit");
     }
 
     private void grid_DataBindingComplete(object? sender, DataGridViewBindingCompleteEventArgs e)

@@ -11,4 +11,8 @@ public interface IStockRepository
     Task<IEnumerable<StockColorView>> GetColorStockAsync(int? articleId = null);
 
     Task DeleteBatchAsync(int batchId);
+
+
+    Task<StockBatch?> GetBatchByIdAsync(int batchId);
+    Task UpdateBatchAsync(StockUpdateRequest request);
 }

@@ -1,6 +1,5 @@
 ﻿using ClothStock.Data.Interfaces;
 using ClothStock.Models.System;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace ClothStock.Business.Services;
 
@@ -14,6 +13,12 @@ public class SettingsService
     }
 
     public Task<IEnumerable<Setting>> GetAllAsync() => _repo.GetAllAsync();
+
+    public async Task<string> GetTextAsync(string key, string defaultValue = "")
+    {
+        var v = await _repo.GetValueAsync(key);
+        return string.IsNullOrWhiteSpace(v) ? defaultValue : v;
+    }
 
     public async Task<decimal> GetDecimalAsync(string key, decimal defaultValue = 0)
     {

@@ -81,7 +81,7 @@ public partial class ArticleForm : Form
         {
             if (!decimal.TryParse(txtPrice.Text.Trim(), out var price))
             {
-                MessageBox.Show("Selling price sahi number mein likhein.", "Check",
+                MessageBox.Show("Please enter selling price as a valid number.", "Check",
                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 txtPrice.Focus();
                 return;
@@ -106,7 +106,7 @@ public partial class ArticleForm : Form
         catch (Exception ex)
         {
             var msg = ex.Message.Contains("UNIQUE", StringComparison.OrdinalIgnoreCase)
-                ? "Ye Article Number pehle se maujood hai. Doosra number likhein."
+                ? "This Article Number already exists. Please enter a different number."
                 : ex.Message;
             MessageBox.Show(msg, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
@@ -136,13 +136,13 @@ public partial class ArticleForm : Form
     {
         if (_currentId == 0)
         {
-            MessageBox.Show("Pehle list se article select karein.", "Check",
+            MessageBox.Show("Please select an article from the list first.", "Check",
                 MessageBoxButtons.OK, MessageBoxIcon.Warning);
             return;
         }
 
         var confirm = MessageBox.Show(
-            $"Kya aap article '{txtNumber.Text} - {txtName.Text}' delete karna chahte hain?",
+            $"Do you want to delete article '{txtNumber.Text} - {txtName.Text}'?",
             "Delete confirm", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
 
         if (confirm != DialogResult.Yes) return;
@@ -159,7 +159,7 @@ public partial class ArticleForm : Form
         }
         catch (Exception ex)
         {
-            MessageBox.Show(ex.Message, "Delete nahi ho saka",
+            MessageBox.Show(ex.Message, "Could not delete",
                 MessageBoxButtons.OK, MessageBoxIcon.Warning);
         }
         finally

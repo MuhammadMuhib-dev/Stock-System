@@ -9,10 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Forms\Auth\" />
-    <Folder Include="Forms\Expenses\" />
-    <Folder Include="Forms\Reports\" />
-    <Folder Include="Forms\Orders\" />
+    <Folder Include="Forms\Expense\" />
   </ItemGroup>
 
   <ItemGroup>

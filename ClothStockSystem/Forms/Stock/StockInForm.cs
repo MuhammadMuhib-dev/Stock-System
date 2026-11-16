@@ -9,6 +9,7 @@ public partial class StockInForm : Form
     private readonly StockService _stock;
     private readonly ArticleService _articles;
     private bool _loading = false;
+    private int _editBatchId = 0;
 
     public StockInForm()
     {
@@ -90,11 +91,15 @@ public partial class StockInForm : Form
             if (SelectedColorId == 0)
             {
                 grid.DataSource = null;
+                grpBatches.Text = "Current batches for this color (no color selected)";
                 return;
             }
 
-            var result = await _stock.GetBatchesAsync(SelectedColorId);
-            grid.DataSource = result.Batches.ToList();
+            // Sab batches (khali bhi), taake edit/delete ho sake
+            var all = (await _stock.GetAllBatchesForColorAsync(SelectedColorId)).ToList();
+            grid.DataSource = all;
+
+            grpBatches.Text = $"Current batches for this color ({all.Count} rows)";
 
             string[] hide =
             {
@@ -109,15 +114,21 @@ public partial class StockInForm : Form
             SetHeader("ReceivedDate", "Received");
             SetHeader("MetersPerSuit", "Meter/Suit");
             SetHeader("CostPricePerSuit", "Cost/Suit");
-            SetHeader("MetersRemaining", "Meter Baqi");
-            SetHeader("SuitsRemaining", "Suits Baqi");
+            SetHeader("MetersRemaining", "Meters Remaining");
+            SetHeader("SuitsRemaining", "Suits Remaining");
 
             if (grid.Columns.Contains("ReceivedDate"))
                 grid.Columns["ReceivedDate"]!.DefaultCellStyle.Format = "dd-MMM-yyyy";
             if (grid.Columns.Contains("CostPricePerSuit"))
                 grid.Columns["CostPricePerSuit"]!.DefaultCellStyle.Format = "N0";
 
-            grid.ClearSelection();
+            // Pehli row khud select ho jaye, taake Edit/Delete foran chale
+            if (grid.Rows.Count > 0)
+            {
+                var firstVisible = grid.Rows[0].Cells.Cast<DataGridViewCell>().FirstOrDefault(c => c.Visible);
+                if (firstVisible != null) grid.CurrentCell = firstVisible;
+                grid.Rows[0].Selected = true;
+            }
         }
         catch (Exception ex)
         {
@@ -147,6 +158,8 @@ public partial class StockInForm : Form
 
     private void ClearInputs()
     {
+        _editBatchId = 0;
+        SetEditMode(false);
         numBunches.Value = 0;
         numSuitsPerBunch.Value = 0;
         numMetersPerSuit.Value = 0;
@@ -164,6 +177,30 @@ public partial class StockInForm : Form
     {
         try
         {
+            if (_editBatchId > 0)
+            {
+                var upd = new StockUpdateRequest
+                {
+                    BatchId = _editBatchId,
+                    ColorId = SelectedColorId,
+                    ReceivedDate = dtpReceived.Value.Date,
+                    BunchesReceived = (int)numBunches.Value,
+                    SuitsPerBunch = (int)numSuitsPerBunch.Value,
+                    MetersPerSuit = numMetersPerSuit.Value,
+                    CostPricePerSuit = numCost.Value,
+                    Supplier = string.IsNullOrWhiteSpace(txtSupplier.Text) ? null : txtSupplier.Text.Trim(),
+                    Notes = string.IsNullOrWhiteSpace(txtNotes.Text) ? null : txtNotes.Text.Trim()
+                };
+
+                btnSave.Enabled = false;
+                await _stock.UpdateBatchAsync(upd);
+                MessageBox.Show("Batch update ho gaya.", "Done",
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+                ClearInputs();
+                await LoadBatchesAsync();
+                return;
+            }
+
             var request = new StockInRequest
             {
                 ColorId = SelectedColorId,
@@ -209,20 +246,20 @@ public partial class StockInForm : Form
 
     private async void btnDelete_Click(object? sender, EventArgs e)
     {
-        if (grid.CurrentRow?.DataBoundItem is not StockBatchView b || !grid.CurrentRow.Selected)
+        if (grid.CurrentRow?.DataBoundItem is not StockBatchView b)
         {
-            MessageBox.Show("Neeche list se wo batch select karein jo delete karna hai.", "Check",
+            MessageBox.Show("Please select a batch from the list to delete.", "Check",
                 MessageBoxButtons.OK, MessageBoxIcon.Warning);
             return;
         }
 
         var confirm = MessageBox.Show(
-            $"Batch '{b.BatchNo}' delete karna hai?\n\n" +
+            $"Delete batch '{b.BatchNo}'?\n\n" +
             $"Received: {b.ReceivedDate:dd-MMM-yyyy}\n" +
-            $"Meter: {b.MetersRemaining:0.###}\n" +
+            $"Meters: {b.MetersRemaining:0.###}\n" +
             $"Suits: {b.SuitsRemaining:N0}\n\n" +
-            "Ye wapas nahi aa sake ga.",
-            "Delete confirm", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+            "This cannot be undone.",
+            "Confirm Delete", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
 
         if (confirm != DialogResult.Yes) return;
 
@@ -231,18 +268,58 @@ public partial class StockInForm : Form
             btnDelete.Enabled = false;
             await _stock.DeleteBatchAsync(b.BatchId);
 
-            MessageBox.Show("Batch delete ho gaya.", "Done",
+            MessageBox.Show("Batch deleted.", "Done",
                 MessageBoxButtons.OK, MessageBoxIcon.Information);
             await LoadBatchesAsync();
         }
         catch (Exception ex)
         {
-            MessageBox.Show(ex.Message, "Delete nahi ho saka",
+            MessageBox.Show(ex.Message, "Could not delete",
                 MessageBoxButtons.OK, MessageBoxIcon.Warning);
         }
         finally
         {
             btnDelete.Enabled = true;
         }
+    }
+
+    private async void btnEdit_Click(object? sender, EventArgs e)
+    {
+        if (grid.CurrentRow?.DataBoundItem is not StockBatchView b)
+        {
+            MessageBox.Show("Please select a batch from the list to edit.", "Check",
+                MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            return;
+        }
+
+        try
+        {
+            var batch = await _stock.GetBatchByIdAsync(b.BatchId);
+            if (batch == null) return;
+
+            _editBatchId = batch.BatchId;
+            dtpReceived.Value = batch.ReceivedDate;
+            txtSupplier.Text = batch.Supplier ?? "";
+            txtNotes.Text = batch.Notes ?? "";
+            numBunches.Value = batch.BunchesReceived;
+            numSuitsPerBunch.Value = batch.SuitsPerBunch;
+            numMetersPerSuit.Value = batch.MetersPerSuit;
+            numCost.Value = batch.CostPricePerSuit;
+            UpdatePreview();
+
+            SetEditMode(true, batch.BatchNo);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+    }
+
+    private void SetEditMode(bool editing, string batchNo = "")
+    {
+        cmbArticle.Enabled = !editing;
+        cmbColor.Enabled = !editing;
+        btnSave.Text = editing ? "Update Stock" : "Save Stock";
+        grpDetails.Text = editing ? $"Edit Batch: {batchNo}" : "Stock In (New Items)";
     }
 }

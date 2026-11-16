@@ -30,6 +30,7 @@
             btnSave = new Button();
             btnClear = new Button();
             btnDelete = new Button();
+            btnEdit = new Button();
             tblInput = new TableLayoutPanel();
             lblArticle = new Label();
             cmbArticle = new ComboBox();
@@ -76,7 +77,7 @@
             grpDetails.Size = new Size(1000, 420);
             grpDetails.TabIndex = 0;
             grpDetails.TabStop = false;
-            grpDetails.Text = "Stock In (Naya Maal)";
+            grpDetails.Text = "Stock In (New Items)";
             // 
             // pnlPreview
             // 
@@ -103,7 +104,7 @@
             lblPreviewTitle.Name = "lblPreviewTitle";
             lblPreviewTitle.Size = new Size(264, 25);
             lblPreviewTitle.TabIndex = 0;
-            lblPreviewTitle.Text = "Hisab (save se pehle preview)";
+            lblPreviewTitle.Text = "Details (preview before save)";
             // 
             // lblPerBunchCaption
             // 
@@ -167,6 +168,7 @@
             flowButtons.Controls.Add(btnSave);
             flowButtons.Controls.Add(btnClear);
             flowButtons.Controls.Add(btnDelete);
+            flowButtons.Controls.Add(btnEdit);
             flowButtons.Dock = DockStyle.Bottom;
             flowButtons.FlowDirection = FlowDirection.RightToLeft;
             flowButtons.Location = new Point(12, 357);
@@ -214,6 +216,19 @@
             btnDelete.Text = "Delete Selected Batch";
             btnDelete.UseVisualStyleBackColor = false;
             btnDelete.Click += btnDelete_Click;
+            //
+            // btnEdit
+            //
+            // 
+            // btnEdit
+            // 
+            btnEdit.Margin = new Padding(6, 8, 6, 3);
+            btnEdit.Name = "btnEdit";
+            btnEdit.Size = new Size(230, 38);
+            btnEdit.TabIndex = 21;
+            btnEdit.Text = "Edit Selected Batch";
+            btnEdit.UseVisualStyleBackColor = true;
+            btnEdit.Click += btnEdit_Click;
             // 
             // tblInput
             // 
@@ -499,7 +514,7 @@
         }
 
         #endregion
-
+        private Button btnEdit;
         private GroupBox grpDetails;
         private TableLayoutPanel tblInput;
         private Label lblArticle;

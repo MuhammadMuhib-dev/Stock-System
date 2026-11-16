@@ -20,4 +20,6 @@ public class StockBatchView
     public int AgeMonths { get; set; }
     public decimal StockValue { get; set; }
     public bool IsOldStock { get; set; }
+
+    public int SuitsPerBunch { get; set; }
 }
