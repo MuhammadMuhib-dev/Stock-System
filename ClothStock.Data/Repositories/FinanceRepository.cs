@@ -256,6 +256,33 @@ public class FinanceRepository : IFinanceRepository
               WHERE VoucherType = 'Purchase' AND PurchaseInvoiceId = @Id",
             new { Id = invoiceId });
     }
+
+    public async Task<IEnumerable<PurchaseVoucherRow>> GetPurchaseVouchersAsync(DateTime? from, DateTime? to, string? search)
+    {
+        using var db = _factory.Create();
+        return await db.QueryAsync<PurchaseVoucherRow>(
+            @"SELECT v.VoucherId, v.VoucherNo, v.VoucherDate, v.InvoiceNo,
+                     ISNULL(v.SupplierName, N'') AS SupplierName, v.DueDate,
+                     v.TotalAmount, v.PaidAmount, v.PaymentText, v.Notes, v.CreatedBy,
+                     ISNULL((SELECT SUM(i.Bunches * i.SuitsPerBunch)
+                             FROM dbo.VoucherItems i WHERE i.VoucherId = v.VoucherId), 0) AS Suits
+              FROM dbo.Vouchers v
+              WHERE v.VoucherType = 'Purchase'
+                AND (@From IS NULL OR v.VoucherDate >= @From)
+                AND (@To   IS NULL OR v.VoucherDate <= @To)
+                AND (@Search IS NULL OR v.VoucherNo LIKE @Search OR v.InvoiceNo LIKE @Search OR v.SupplierName LIKE @Search)
+              ORDER BY v.VoucherDate DESC, v.VoucherId DESC",
+            new { From = from, To = to, Search = Like(search) });
+    }
+
+    public async Task<IEnumerable<PurchaseVoucherItemRow>> GetPurchaseVoucherItemsAsync(int voucherId)
+    {
+        using var db = _factory.Create();
+        return await db.QueryAsync<PurchaseVoucherItemRow>(
+            @"SELECT VoucherItemId, ArticleName, ColorName, Bunches, SuitsPerBunch, MetersPerSuit, CostPerSuit
+              FROM dbo.VoucherItems WHERE VoucherId = @Id ORDER BY VoucherItemId",
+            new { Id = voucherId });
+    }
     public async Task<IEnumerable<CodPending>> GetCodPendingAsync()
     {
         using var db = _factory.Create();

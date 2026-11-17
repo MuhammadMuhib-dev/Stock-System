@@ -42,6 +42,7 @@
             btnColors = new Button();
             btnStockIn = new Button();
             btnPurchase = new Button();
+            btnPurchaseList = new Button();
             btnStockView = new Button();
             btnStockAdjust = new Button();
             btnShopSale = new Button();
@@ -176,21 +177,24 @@
             // Group 3: Purchase & Expenses (jo paisa / maal bahar jata hai)
             // 
             StyleGroupButton(btnGrpMoney, "btnGrpMoney", "Purchase && Expenses", 3, "\uE8C7");
-            StyleSubPanel(pnlSubMoney, "pnlSubMoney", 5);
+            StyleSubPanel(pnlSubMoney, "pnlSubMoney", 6);
             pnlSubMoney.Controls.Add(btnWorkers);
             pnlSubMoney.Controls.Add(btnExpSetup);
             pnlSubMoney.Controls.Add(btnExpenses);
             pnlSubMoney.Controls.Add(btnStockIn);
+            pnlSubMoney.Controls.Add(btnPurchaseList);
             pnlSubMoney.Controls.Add(btnPurchase);
             StyleSubButton(btnPurchase, "btnPurchase", "Purchase Bill", 1, "\uE8A5");
             btnPurchase.Click += btnPurchase_Click;
-            StyleSubButton(btnStockIn, "btnStockIn", "Stock In", 2, "\uE896");
+            StyleSubButton(btnPurchaseList, "btnPurchaseList", "Purchase Bills List", 2, "\uE8FD");
+            btnPurchaseList.Click += btnPurchaseList_Click;
+            StyleSubButton(btnStockIn, "btnStockIn", "Stock In", 3, "\uE896");
             btnStockIn.Click += btnStockIn_Click;
-            StyleSubButton(btnExpenses, "btnExpenses", "Expenses", 3, "\uE8C7");
+            StyleSubButton(btnExpenses, "btnExpenses", "Expenses", 4, "\uE8C7");
             btnExpenses.Click += btnExpenses_Click;
-            StyleSubButton(btnExpSetup, "btnExpSetup", "Expense Setup", 4, "\uE713");
+            StyleSubButton(btnExpSetup, "btnExpSetup", "Expense Setup", 5, "\uE713");
             btnExpSetup.Click += btnExpSetup_Click;
-            StyleSubButton(btnWorkers, "btnWorkers", "Workers", 5, "\uE716");
+            StyleSubButton(btnWorkers, "btnWorkers", "Workers", 6, "\uE716");
             btnWorkers.Click += btnWorkers_Click;
             // 
             // Group 4: Accounts (khata, cash, parties, munafa)
@@ -233,7 +237,7 @@
                 SetGroupText(g.Header, g.Title, false);
             }
             // Active (selected) button highlight
-            foreach (var b in new[] { btnArticles, btnColors, btnStockIn, btnPurchase, btnStockView,
+            foreach (var b in new[] { btnArticles, btnColors, btnStockIn, btnPurchase, btnPurchaseList, btnStockView,
                 btnStockAdjust, btnShopSale, btnOnlineOrder, btnAllSales, btnReturns, btnCouriers,
                 btnExpenses, btnExpSetup, btnWorkers, btnProfit, btnLedger, btnCashBook, btnParties,
                 btnReports, btnSettings })
@@ -641,6 +645,7 @@
         private Button btnColors;
         private Button btnStockIn;
         private Button btnPurchase;
+        private Button btnPurchaseList;
         private Button btnStockView;
         private Button btnStockAdjust;
         private Button btnShopSale;

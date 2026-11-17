@@ -13,7 +13,7 @@ public partial class SettingsForm : Form
 
     // Key types
     private static readonly string[] BoolKeys = { "TaxOnReturn", "AllowSaleBelowCost", "ReceiptPreview", "SellerSeesCost" };
-    private static readonly string[] TextKeys = { "ShopName", "ShopAddress", "ShopPhone", "ReceiptFooter" };
+    private static readonly string[] TextKeys = { "ShopName", "ShopAddress", "ShopPhone", "ReceiptFooter", "PurchaseVoucherPrefix", "PurchaseHeadName", "VoucherFolder" };
     private static readonly string[] MultilineKeys = { "ShopAddress", "ReceiptFooter" };
 
     // English descriptions (jo key yahan nahi hogi, uski description DB se aayegi)
@@ -28,6 +28,10 @@ public partial class SettingsForm : Form
         ["ReceiptFooter"] = "Message printed at the bottom of every receipt.",
         ["ReceiptPreview"] = "Show a preview before printing a receipt.",
         ["SellerSeesCost"] = "Allow sales staff to see the cost price of items.",
+        ["PurchaseVoucherPrefix"] = "Text at the start of every purchase voucher number (e.g. PV-).",
+        ["VoucherNumberDigits"] = "How many digits the voucher number has (5 gives PV-00001).",
+        ["PurchaseHeadName"] = "Account name shown as the debit side of a purchase voucher.",
+        ["VoucherFolder"] = "Folder where voucher PDFs are saved. Leave empty to use Documents\\ClothStock Vouchers.",
     };
 
     // Section grouping (jo key yahan nahi hogi wo "Other" mein jayegi)
@@ -42,10 +46,14 @@ public partial class SettingsForm : Form
         ["ReceiptFooter"] = "Receipt",
         ["ReceiptPreview"] = "Receipt",
         ["SellerSeesCost"] = "Permissions",
+        ["PurchaseVoucherPrefix"] = "Purchase Voucher",
+        ["VoucherNumberDigits"] = "Purchase Voucher",
+        ["PurchaseHeadName"] = "Purchase Voucher",
+        ["VoucherFolder"] = "Purchase Voucher",
     };
 
     private static readonly string[] SectionOrder =
-        { "Shop Information", "Tax & Pricing", "Receipt", "Permissions", "Other" };
+        { "Shop Information", "Tax & Pricing", "Receipt", "Purchase Voucher", "Permissions", "Other" };
 
     // Theme (saare rang yahan se badal sakte hain)
     private static readonly Color PageBack = Color.FromArgb(243, 244, 246);

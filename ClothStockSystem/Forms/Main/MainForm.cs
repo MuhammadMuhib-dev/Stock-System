@@ -170,6 +170,7 @@ public partial class MainForm : Form
     private void btnColors_Click(object? sender, EventArgs e) => OpenForm(new ColorForm(), btnColors);
     private void btnStockIn_Click(object? sender, EventArgs e) => OpenForm(new StockInForm(), btnStockIn);
     private void btnPurchase_Click(object? sender, EventArgs e) => OpenForm(new PurchaseBillForm(), btnPurchase);
+    private void btnPurchaseList_Click(object? sender, EventArgs e) => OpenForm(new PurchaseHistoryForm(), btnPurchaseList);
     private void btnStockView_Click(object? sender, EventArgs e) => OpenForm(new StockViewForm(), btnStockView);
     private void btnStockAdjust_Click(object? sender, EventArgs e) => OpenForm(new StockAdjustForm(), btnStockAdjust);
     private void btnShopSale_Click(object? sender, EventArgs e) => OpenForm(new ShopSaleForm(), btnShopSale);

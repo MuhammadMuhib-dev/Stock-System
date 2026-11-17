@@ -31,6 +31,8 @@ public interface IFinanceRepository
     Task<IEnumerable<CashBookRow>> GetCashBookAsync(int? accountId, DateTime? from, DateTime? to, bool includeVoid);
     Task<int> PurchaseStockInAsync(PurchaseBillRequest r);
     Task<PurchaseVoucherInfo?> GetPurchaseVoucherAsync(int invoiceId);
+    Task<IEnumerable<PurchaseVoucherRow>> GetPurchaseVouchersAsync(DateTime? from, DateTime? to, string? search);
+    Task<IEnumerable<PurchaseVoucherItemRow>> GetPurchaseVoucherItemsAsync(int voucherId);
     Task<IEnumerable<CodPending>> GetCodPendingAsync();
     Task<int> CodRemitAsync(IEnumerable<int> orderIds, decimal amount, int accountId, string method, DateTime date, string? notes, string? key, string? user);
     Task<int> CashManualAsync(string direction, decimal amount, int accountId, string method, DateTime date, string? notes, string? key, string? user);

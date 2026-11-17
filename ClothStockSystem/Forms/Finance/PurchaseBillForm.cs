@@ -12,9 +12,6 @@ public class PurchaseBillForm : Form
 {
     private static string CurrentUser => SessionManager.Username;
 
-    // PDF par jo shop ka naam chhapega, yahan apni shop ka naam likhein
-    private const string ShopName = "Meri Shop";
-
     private readonly FinanceService _fin;
     private readonly ArticleService _articles;
     private readonly ExpenseSetupService _setup;
@@ -167,7 +164,7 @@ public class PurchaseBillForm : Form
         foreach (var (c, t) in new[] { ("Article", "Article"), ("Color", "Color"), ("Bunches", "Bunches"), ("SuitsPerBunch", "Suits/bunch"),
                                        ("MetersPerSuit", "Meter/suit"), ("CostPerSuit", "Cost/suit"), ("Suits", "Kul suits"),
                                        ("Meters", "Kul meter"), ("LineTotal", "Line total") })
-            if (_grid.Columns.Contains(c)) _grid.Columns[c]!.HeaderText = t;
+            if (_grid.Columns.Contains(t == "" ? c : c)) _grid.Columns[c]!.HeaderText = t;
         if (_grid.Columns.Contains("ColorId")) _grid.Columns["ColorId"]!.Visible = false;
         foreach (var c in new[] { "CostPerSuit", "LineTotal" })
             if (_grid.Columns.Contains(c)) { _grid.Columns[c]!.DefaultCellStyle.Format = "N0"; _grid.Columns[c]!.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight; }
@@ -249,9 +246,6 @@ public class PurchaseBillForm : Form
         try
         {
             if (_sup.SelectedValue is not int sid) { MessageBox.Show("Supplier chunen.", "Check"); return; }
-            if (_lines.Count == 0) { MessageBox.Show("Bill mein kam az kam ek line add karein.", "Check"); return; }
-            if (_paid.Value > Total) { MessageBox.Show("Diya hua amount bill total se zyada hai.", "Check"); return; }
-
             var req = new PurchaseBillRequest
             {
                 SupplierId = sid,
@@ -281,23 +275,45 @@ public class PurchaseBillForm : Form
             if (MessageBox.Show(msg, "Confirm", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes) return;
 
             _save.Enabled = false;
-            var voucherId = await _fin.PurchaseStockInAsync(req);
+            var invoiceId = await _fin.PurchaseStockInAsync(req);
+            await ShowVoucherAsync(invoiceId, req);
 
-            // PDF ka data lines clear hone se PEHLE bana lein
-            var pdfData = new PurchaseVoucherPdfData
+            _lines.Clear(); _no.Clear(); _notes.Clear(); _paid.Value = 0;
+            _key = Guid.NewGuid().ToString("N");
+            Recalc();
+        }
+        catch (Exception ex) { MessageBox.Show(ex.Message, "Bill save nahi hua", MessageBoxButtons.OK, MessageBoxIcon.Warning); }
+        finally { _save.Enabled = true; }
+    }
+
+    // Bill save hone ke baad: voucher number lein, PDF banayen, aur kholne ka poochein.
+    // Bill pehle hi save ho chuka hota hai, is liye yahan koi masla aaye to sirf PDF ka message aata hai.
+    private async Task ShowVoucherAsync(int invoiceId, PurchaseBillRequest req)
+    {
+        string? voucherNo = null, pdfPath = null;
+        try
+        {
+            var v = await _fin.GetPurchaseVoucherAsync(invoiceId)
+                    ?? throw new InvalidOperationException("Voucher record nahi mila. 01_Voucher_Setup.sql chalayi thi?");
+            voucherNo = v.VoucherNo;
+
+            var settings = Program.Services.GetRequiredService<SettingsService>();
+            var folder = await PurchaseVoucherPdf.GetFolderAsync(settings);
+            pdfPath = Path.Combine(folder, v.VoucherNo + ".pdf");
+
+            var data = new PurchaseVoucherPdfData
             {
-                ShopName = ShopName,
-                VoucherNo = $"PV-{voucherId:00000}",
-                VoucherDate = DateTime.Now,
+                VoucherNo = v.VoucherNo,
+                VoucherDate = v.VoucherDate,
                 Supplier = _sup.Text,
                 InvoiceNo = req.InvoiceNo,
                 InvoiceDate = req.InvoiceDate,
                 DueDate = req.DueDate,
                 Notes = req.Notes,
-                User = CurrentUser,
+                User = req.User,
                 Total = req.Total,
                 Paid = req.PaidNow,
-                PaidFrom = $"{_method.Text} ({_acc.Text})",
+                PaidFrom = req.PaidNow > 0 ? $"{_acc.Text} ({req.Method})" : null,
                 Lines = _lines.Select(l => new PurchaseVoucherPdfLine
                 {
                     Article = l.Article,
@@ -308,29 +324,19 @@ public class PurchaseBillForm : Form
                     CostPerSuit = l.CostPerSuit
                 }).ToList()
             };
-
-            MessageBox.Show("Bill aur stock save ho gaya.", "Done", MessageBoxButtons.OK, MessageBoxIcon.Information);
-
-            // PDF banao aur kholo (wahan se Ctrl+P se print ho jayega)
-            try
-            {
-                var folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Vouchers");
-                Directory.CreateDirectory(folder);
-                var filePath = Path.Combine(folder, $"{pdfData.VoucherNo}.pdf");
-                PurchaseVoucherPdf.Create(filePath, pdfData);
-                Process.Start(new ProcessStartInfo(filePath) { UseShellExecute = true });
-            }
-            catch (Exception pdfEx)
-            {
-                MessageBox.Show("Bill save ho gaya, lekin PDF nahi bani: " + pdfEx.Message, "PDF error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            }
-
-            _lines.Clear(); _no.Clear(); _notes.Clear(); _paid.Value = 0;
-            _key = Guid.NewGuid().ToString("N");
-            Recalc();
+            await PurchaseVoucherPdf.LoadShopInfoAsync(data, settings);
+            PurchaseVoucherPdf.Create(pdfPath, data);
         }
-        catch (Exception ex) { MessageBox.Show(ex.Message, "Bill save nahi hua", MessageBoxButtons.OK, MessageBoxIcon.Warning); }
-        finally { _save.Enabled = true; }
-    }
+        catch (Exception ex)
+        {
+            MessageBox.Show("Bill aur stock save ho gaya, lekin voucher PDF nahi ban saki:\n" + ex.Message,
+                "Voucher PDF", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            return;
+        }
 
+        var open = MessageBox.Show($"Bill, stock aur voucher save ho gaya.\nVoucher no: {voucherNo}\n\nPDF abhi kholni hai?",
+            "Done", MessageBoxButtons.YesNo, MessageBoxIcon.Information);
+        if (open == DialogResult.Yes && pdfPath != null)
+            Process.Start(new ProcessStartInfo(pdfPath) { UseShellExecute = true });
+    }
 }

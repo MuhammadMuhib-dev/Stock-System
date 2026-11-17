@@ -207,6 +207,10 @@ public class FinanceService
         { throw new InvalidOperationException("Is supplier ka ye bill number pehle se maujood hai."); }
     }
     public Task<PurchaseVoucherInfo?> GetPurchaseVoucherAsync(int invoiceId) => _repo.GetPurchaseVoucherAsync(invoiceId);
+    public Task<IEnumerable<PurchaseVoucherRow>> GetPurchaseVouchersAsync(DateTime? from, DateTime? to, string? search)
+        => _repo.GetPurchaseVouchersAsync(from, to, search);
+    public Task<IEnumerable<PurchaseVoucherItemRow>> GetPurchaseVoucherItemsAsync(int voucherId)
+        => _repo.GetPurchaseVoucherItemsAsync(voucherId);
 
     public Task<IEnumerable<CodPending>> GetCodPendingAsync() => _repo.GetCodPendingAsync();
 

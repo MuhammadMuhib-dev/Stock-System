@@ -1,4 +1,4 @@
-﻿using ClothStock.Models.Stock;
+﻿using ClothStock.Business.Services;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
@@ -21,6 +21,8 @@ public class PurchaseVoucherPdfLine
 public class PurchaseVoucherPdfData
 {
     public string ShopName { get; set; } = "";
+    public string ShopAddress { get; set; } = "";
+    public string ShopPhone { get; set; } = "";
     public string PurchaseHead { get; set; } = "Purchases";
     public string VoucherNo { get; set; } = "";
     public DateTime VoucherDate { get; set; }
@@ -39,166 +41,311 @@ public class PurchaseVoucherPdfData
 
 public static class PurchaseVoucherPdf
 {
-    private static readonly string Dark = Colors.Teal.Darken3;
-    private static readonly string Soft = Colors.Grey.Lighten3;
+    // Shop name, address, phone and purchase head come from Settings
+    public static async Task LoadShopInfoAsync(PurchaseVoucherPdfData d, SettingsService s)
+    {
+        d.ShopName = await s.GetTextAsync("ShopName", "Shop");
+        d.ShopAddress = await s.GetTextAsync("ShopAddress", "");
+        d.ShopPhone = await s.GetTextAsync("ShopPhone", "");
+        d.PurchaseHead = await s.GetTextAsync("PurchaseHeadName", "Purchases");
+    }
+
+    // PDF folder: Settings "VoucherFolder"; if empty, Documents\ClothStock Vouchers
+    public static async Task<string> GetFolderAsync(SettingsService s)
+    {
+        var folder = await s.GetTextAsync("VoucherFolder", "");
+        if (string.IsNullOrWhiteSpace(folder))
+            folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "ClothStock Vouchers");
+        Directory.CreateDirectory(folder);
+        return folder;
+    }
+
+    // ---- Palette ----
+    private const string Primary = "#0F766E";   // deep teal
+    private const string Accent = "#14B8A6";
+    private const string Ink = "#0F172A";
+    private const string Muted = "#64748B";
+    private const string Line = "#E2E8F0";
+    private const string Light = "#F1F5F9";
+    private const string Green = "#15803D";
+    private const string Amber = "#B45309";
+    private const string Red = "#B91C1C";
 
     public static void Create(string filePath, PurchaseVoucherPdfData d)
     {
         QuestPDF.Settings.License = LicenseType.Community;
+
+        var status = d.Balance <= 0 ? "PAID" : d.Paid > 0 ? "PARTIALLY PAID" : "UNPAID";
+        var statusColor = d.Balance <= 0 ? Green : d.Paid > 0 ? Amber : Red;
 
         Document.Create(doc =>
         {
             doc.Page(page =>
             {
                 page.Size(PageSizes.A4);
-                page.Margin(30);
-                page.DefaultTextStyle(x => x.FontSize(10));
+                page.Margin(36);
+                page.DefaultTextStyle(x => x.FontSize(9.5f).FontColor(Ink));
 
+                // ================= HEADER =================
                 page.Header().Column(col =>
                 {
-                    col.Item().Text(d.ShopName).FontSize(18).Bold().FontColor(Dark);
-                    col.Item().Text("PURCHASE VOUCHER").FontSize(12).SemiBold();
-                    col.Item().PaddingTop(6).LineHorizontal(1).LineColor(Colors.Grey.Medium);
-                });
-
-                page.Content().PaddingVertical(10).Column(col =>
-                {
-                    col.Spacing(12);
-
-                    // ---- voucher / bill ki details
                     col.Item().Row(row =>
                     {
-                        row.RelativeItem().Column(c =>
+                        row.RelativeItem().Column(left =>
                         {
-                            c.Item().Text(t => { t.Span("Voucher no: ").SemiBold(); t.Span(d.VoucherNo); });
-                            c.Item().Text(t => { t.Span("Voucher date: ").SemiBold(); t.Span($"{d.VoucherDate:dd-MMM-yyyy}"); });
-                            c.Item().Text(t => { t.Span("Supplier: ").SemiBold(); t.Span(d.Supplier); });
+                            left.Item().Text(d.ShopName).FontSize(20).Bold().FontColor(Primary);
+                            if (!string.IsNullOrWhiteSpace(d.ShopAddress))
+                                left.Item().PaddingTop(2).Text(d.ShopAddress.Trim()).FontSize(9).FontColor(Muted);
+                            if (!string.IsNullOrWhiteSpace(d.ShopPhone))
+                                left.Item().Text("Tel: " + d.ShopPhone.Trim()).FontSize(9).FontColor(Muted);
                         });
-                        row.RelativeItem().Column(c =>
+
+                        row.ConstantItem(210).Column(right =>
                         {
-                            c.Item().Text(t => { t.Span("Bill no: ").SemiBold(); t.Span(d.InvoiceNo); });
-                            c.Item().Text(t => { t.Span("Bill date: ").SemiBold(); t.Span($"{d.InvoiceDate:dd-MMM-yyyy}"); });
-                            if (d.DueDate.HasValue)
-                                c.Item().Text(t => { t.Span("Due date: ").SemiBold(); t.Span($"{d.DueDate:dd-MMM-yyyy}"); });
+                            right.Item().AlignRight().Text("PURCHASE VOUCHER").FontSize(15).Bold().FontColor(Ink);
+                            right.Item().AlignRight().PaddingTop(2).Text(d.VoucherNo).FontSize(11).SemiBold().FontColor(Muted);
+                            right.Item().AlignRight().PaddingTop(5)
+                                .Background(statusColor).PaddingHorizontal(9).PaddingVertical(2)
+                                .Text(status).FontSize(8).Bold().FontColor(Colors.White);
+                        });
+                    });
+                    col.Item().PaddingTop(10).LineHorizontal(2.5f).LineColor(Accent);
+                    col.Item().PaddingBottom(10);
+                });
+
+                // ================= CONTENT =================
+                page.Content().Column(col =>
+                {
+                    col.Spacing(16);
+
+                    // ---- Supplier + voucher info cards
+                    col.Item().ShowEntire().Row(row =>
+                    {
+                        row.RelativeItem().Element(Card).Column(c =>
+                        {
+                            c.Spacing(4);
+                            c.Item().Text("SUPPLIER").FontSize(8).Bold().FontColor(Primary);
+                            c.Item().Text(d.Supplier).FontSize(13).Bold();
+                            KV(c, "Bill No", d.InvoiceNo);
+                            KV(c, "Bill Date", $"{d.InvoiceDate:dd MMM yyyy}");
+                        });
+
+                        row.ConstantItem(14);
+
+                        row.RelativeItem().Element(Card).Column(c =>
+                        {
+                            c.Spacing(4);
+                            c.Item().Text("VOUCHER DETAILS").FontSize(8).Bold().FontColor(Primary);
+                            KV(c, "Voucher No", d.VoucherNo);
+                            KV(c, "Voucher Date", $"{d.VoucherDate:dd MMM yyyy}");
+                            if (d.DueDate.HasValue) KV(c, "Due Date", $"{d.DueDate:dd MMM yyyy}");
+                            KV(c, "Prepared By", d.User);
                         });
                     });
 
-                    // ---- maal ki table
-                    col.Item().Table(table =>
+                    // ---- Items table
+                    col.Item().Column(items =>
                     {
-                        table.ColumnsDefinition(c =>
-                        {
-                            c.RelativeColumn(3);   // article
-                            c.RelativeColumn(3);   // color
-                            c.RelativeColumn(1.2f);// bunches
-                            c.RelativeColumn(1.4f);// suits/bunch
-                            c.RelativeColumn(1.4f);// kul suits
-                            c.RelativeColumn(1.6f);// kul meter
-                            c.RelativeColumn(1.8f);// cost/suit
-                            c.RelativeColumn(2.2f);// total
-                        });
+                        items.Item().PaddingBottom(5).Text("ITEMS RECEIVED").FontSize(8).Bold().FontColor(Primary);
 
-                        table.Header(h =>
+                        items.Item().Table(table =>
                         {
-                            void H(string s, bool right = false)
+                            table.ColumnsDefinition(c =>
                             {
-                                var cell = h.Cell().Element(HeadCell);
-                                if (right) cell.AlignRight().Text(s).SemiBold().FontColor(Colors.White);
-                                else cell.Text(s).SemiBold().FontColor(Colors.White);
+                                c.ConstantColumn(24);    // #
+                                c.RelativeColumn(3);     // article
+                                c.RelativeColumn(2.4f);  // color
+                                c.RelativeColumn(1.2f);  // bunches
+                                c.RelativeColumn(1.4f);  // suits per bunch
+                                c.RelativeColumn(1.3f);  // total suits
+                                c.RelativeColumn(1.5f);  // total meters
+                                c.RelativeColumn(1.5f);  // cost per suit
+                                c.RelativeColumn(2f);    // amount
+                            });
+
+                            table.Header(h =>
+                            {
+                                void H(string s, bool right = false)
+                                {
+                                    var cell = h.Cell().Element(HeadCell);
+                                    if (right) cell.AlignRight().Text(s); else cell.Text(s);
+                                }
+                                H("#"); H("Article"); H("Color");
+                                H("Bunches", true); H("Suits / Bunch", true); H("Total Suits", true);
+                                H("Total Meters", true); H("Cost / Suit", true); H("Amount", true);
+                            });
+
+                            var i = 0;
+                            foreach (var l in d.Lines)
+                            {
+                                var alt = i % 2 == 1;
+                                i++;
+                                IContainer B(IContainer c) => Body(c, alt);
+
+                                table.Cell().Element(B).Text(i.ToString()).FontColor(Muted);
+                                table.Cell().Element(B).Text(l.Article).SemiBold();
+                                table.Cell().Element(B).Text(l.Color);
+                                table.Cell().Element(B).AlignRight().Text($"{l.Bunches:N0}");
+                                table.Cell().Element(B).AlignRight().Text($"{l.SuitsPerBunch:N0}");
+                                table.Cell().Element(B).AlignRight().Text($"{l.Suits:N0}");
+                                table.Cell().Element(B).AlignRight().Text($"{l.Meters:0.###}");
+                                table.Cell().Element(B).AlignRight().Text($"{l.CostPerSuit:N0}");
+                                table.Cell().Element(B).AlignRight().Text($"{l.LineTotal:N0}").SemiBold();
                             }
-                            H("Article"); H("Color"); H("Bunches", true); H("Suits/bunch", true);
-                            H("Kul suits", true); H("Kul meter", true); H("Cost/suit", true); H("Line total", true);
+
+                            // ---- Totals row
+                            table.Cell().ColumnSpan(3).Element(TotalCell).Text("TOTAL");
+                            table.Cell().Element(TotalCell).AlignRight().Text($"{d.Lines.Sum(x => x.Bunches):N0}");
+                            table.Cell().Element(TotalCell).Text("");
+                            table.Cell().Element(TotalCell).AlignRight().Text($"{d.Lines.Sum(x => x.Suits):N0}");
+                            table.Cell().Element(TotalCell).AlignRight().Text($"{d.Lines.Sum(x => x.Meters):0.###}");
+                            table.Cell().Element(TotalCell).Text("");
+                            table.Cell().Element(TotalCell).AlignRight().Text($"{d.Lines.Sum(x => x.LineTotal):N0}");
+                        });
+                    });
+
+                    // ---- Notes (left) + payment summary (right)
+                    col.Item().ShowEntire().Row(row =>
+                    {
+                        row.RelativeItem().PaddingRight(20).Column(c =>
+                        {
+                            if (!string.IsNullOrWhiteSpace(d.Notes))
+                            {
+                                c.Item().Text("NOTES").FontSize(8).Bold().FontColor(Primary);
+                                c.Item().PaddingTop(3).Text(d.Notes!.Trim()).FontColor(Muted);
+                            }
                         });
 
-                        foreach (var l in d.Lines)
+                        row.ConstantItem(250).Background(Light).Padding(12).Column(c =>
                         {
-                            table.Cell().Element(BodyCell).Text(l.Article);
-                            table.Cell().Element(BodyCell).Text(l.Color);
-                            table.Cell().Element(BodyCell).AlignRight().Text($"{l.Bunches:N0}");
-                            table.Cell().Element(BodyCell).AlignRight().Text($"{l.SuitsPerBunch:N0}");
-                            table.Cell().Element(BodyCell).AlignRight().Text($"{l.Suits:N0}");
-                            table.Cell().Element(BodyCell).AlignRight().Text($"{l.Meters:0.###}");
-                            table.Cell().Element(BodyCell).AlignRight().Text($"{l.CostPerSuit:N0}");
-                            table.Cell().Element(BodyCell).AlignRight().Text($"{l.LineTotal:N0}");
-                        }
+                            c.Spacing(5);
+                            SumRow(c, "Bill Total", $"{d.Total:N0}", bold: true);
+                            SumRow(c, "Paid Now", $"{d.Paid:N0}");
+                            if (d.Paid > 0 && !string.IsNullOrWhiteSpace(d.PaidFrom))
+                                c.Item().AlignRight().Text($"via {d.PaidFrom}").FontSize(8).FontColor(Muted);
+                            c.Item().PaddingVertical(2).LineHorizontal(1).LineColor(Primary);
+                            c.Item().Row(r =>
+                            {
+                                r.RelativeItem().Text("Balance Due").FontSize(11).Bold();
+                                r.ConstantItem(110).AlignRight().Text($"{d.Balance:N0}").FontSize(12).Bold()
+                                    .FontColor(d.Balance > 0 ? Red : Green);
+                            });
+                        });
                     });
 
-                    // ---- total / ada / baqi
-                    col.Item().AlignRight().Width(230).Column(c =>
+                    // ---- Accounting entry
+                    col.Item().ShowEntire().Column(c =>
                     {
-                        c.Item().Row(r => { r.RelativeItem().Text("Bill total").SemiBold(); r.ConstantItem(100).AlignRight().Text($"{d.Total:N0}").Bold(); });
-                        c.Item().Row(r => { r.RelativeItem().Text("Abhi ada kiya"); r.ConstantItem(100).AlignRight().Text($"{d.Paid:N0}"); });
-                        c.Item().PaddingTop(2).LineHorizontal(0.5f);
-                        c.Item().Row(r => { r.RelativeItem().Text("Baqi udhaar").SemiBold(); r.ConstantItem(100).AlignRight().Text($"{d.Balance:N0}").Bold(); });
-                    });
-
-                    // ---- ledger entry (double entry)
-                    col.Item().Column(c =>
-                    {
-                        c.Item().Text("Ledger entry").SemiBold().FontColor(Dark);
-                        c.Item().PaddingTop(4).Table(t =>
+                        c.Item().PaddingBottom(5).Text("ACCOUNTING ENTRY").FontSize(8).Bold().FontColor(Primary);
+                        c.Item().Table(t =>
                         {
                             t.ColumnsDefinition(cd => { cd.RelativeColumn(5); cd.RelativeColumn(2); cd.RelativeColumn(2); });
                             t.Header(h =>
                             {
-                                h.Cell().Element(HeadCell).Text("Account").SemiBold().FontColor(Colors.White);
-                                h.Cell().Element(HeadCell).AlignRight().Text("Debit").SemiBold().FontColor(Colors.White);
-                                h.Cell().Element(HeadCell).AlignRight().Text("Credit").SemiBold().FontColor(Colors.White);
+                                h.Cell().Element(HeadCell).Text("Account");
+                                h.Cell().Element(HeadCell).AlignRight().Text("Debit");
+                                h.Cell().Element(HeadCell).AlignRight().Text("Credit");
                             });
 
-                            t.Cell().Element(BodyCell).Text(d.PurchaseHead);
-                            t.Cell().Element(BodyCell).AlignRight().Text($"{d.Total:N0}");
-                            t.Cell().Element(BodyCell).AlignRight().Text("");
+                            var n = 0;
+                            void Row(string acct, decimal? debit, decimal? credit)
+                            {
+                                var alt = n++ % 2 == 1;
+                                IContainer B(IContainer x) => Body(x, alt);
+                                t.Cell().Element(B).Text(acct);
+                                t.Cell().Element(B).AlignRight().Text(debit.HasValue ? $"{debit:N0}" : "");
+                                t.Cell().Element(B).AlignRight().Text(credit.HasValue ? $"{credit:N0}" : "");
+                            }
 
-                            if (d.Balance > 0)
-                            {
-                                t.Cell().Element(BodyCell).Text($"{d.Supplier} (udhaar)");
-                                t.Cell().Element(BodyCell).AlignRight().Text("");
-                                t.Cell().Element(BodyCell).AlignRight().Text($"{d.Balance:N0}");
-                            }
-                            if (d.Paid > 0)
-                            {
-                                t.Cell().Element(BodyCell).Text(d.PaidFrom ?? "Payment");
-                                t.Cell().Element(BodyCell).AlignRight().Text("");
-                                t.Cell().Element(BodyCell).AlignRight().Text($"{d.Paid:N0}");
-                            }
+                            Row(d.PurchaseHead, d.Total, null);
+                            if (d.Balance > 0) Row($"{d.Supplier} (payable)", null, d.Balance);
+                            if (d.Paid > 0) Row(string.IsNullOrWhiteSpace(d.PaidFrom) ? "Payment" : d.PaidFrom!, null, d.Paid);
+
+                            t.Cell().Element(TotalCell).Text("Total");
+                            t.Cell().Element(TotalCell).AlignRight().Text($"{d.Total:N0}");
+                            t.Cell().Element(TotalCell).AlignRight().Text($"{d.Balance + d.Paid:N0}");
                         });
                     });
 
-                    if (!string.IsNullOrWhiteSpace(d.Notes))
-                        col.Item().Text(t => { t.Span("Notes: ").SemiBold(); t.Span(d.Notes!); });
-
-                    // ---- dastakhat
-                    col.Item().PaddingTop(30).Row(r =>
+                    // ---- Signatures
+                    col.Item().ShowEntire().PaddingTop(34).Row(r =>
                     {
                         r.RelativeItem().Column(c =>
                         {
-                            c.Item().LineHorizontal(0.5f);
-                            c.Item().Text($"Tayyar karne wala{(string.IsNullOrWhiteSpace(d.User) ? "" : ": " + d.User)}").FontSize(9);
+                            c.Item().LineHorizontal(0.75f).LineColor(Muted);
+                            c.Item().PaddingTop(3).Text("Prepared by" + (string.IsNullOrWhiteSpace(d.User) ? "" : $": {d.User}"))
+                                .FontSize(8.5f).FontColor(Muted);
                         });
                         r.ConstantItem(40);
                         r.RelativeItem().Column(c =>
                         {
-                            c.Item().LineHorizontal(0.5f);
-                            c.Item().Text("Supplier ke dastakhat").FontSize(9);
+                            c.Item().LineHorizontal(0.75f).LineColor(Muted);
+                            c.Item().PaddingTop(3).Text("Authorised signature").FontSize(8.5f).FontColor(Muted);
+                        });
+                        r.ConstantItem(40);
+                        r.RelativeItem().Column(c =>
+                        {
+                            c.Item().LineHorizontal(0.75f).LineColor(Muted);
+                            c.Item().PaddingTop(3).Text("Supplier signature").FontSize(8.5f).FontColor(Muted);
                         });
                     });
                 });
 
-                page.Footer().AlignCenter().Text(t =>
-                {
-                    t.Span($"{d.VoucherNo}   |   Page ").FontSize(8).FontColor(Colors.Grey.Darken1);
-                    t.CurrentPageNumber().FontSize(8).FontColor(Colors.Grey.Darken1);
-                    t.Span(" / ").FontSize(8).FontColor(Colors.Grey.Darken1);
-                    t.TotalPages().FontSize(8).FontColor(Colors.Grey.Darken1);
-                });
+                // ================= FOOTER =================
+                page.Footer().BorderTop(0.75f).BorderColor(Line).PaddingTop(6)
+                    .DefaultTextStyle(x => x.FontSize(8).FontColor(Muted))
+                    .Row(r =>
+                    {
+                        r.RelativeItem().Text($"Generated on {DateTime.Now:dd MMM yyyy, HH:mm}");
+                        r.RelativeItem().AlignCenter().Text(d.VoucherNo);
+                        r.RelativeItem().AlignRight().Text(t =>
+                        {
+                            t.Span("Page ");
+                            t.CurrentPageNumber();
+                            t.Span(" of ");
+                            t.TotalPages();
+                        });
+                    });
             });
         }).GeneratePdf(filePath);
     }
 
-    private static IContainer HeadCell(IContainer c) =>
-        c.Background(Dark).PaddingVertical(4).PaddingHorizontal(5);
+    // ---------------- Helpers ----------------
 
-    private static IContainer BodyCell(IContainer c) =>
-        c.BorderBottom(0.5f).BorderColor(Soft).PaddingVertical(4).PaddingHorizontal(5);
+    private static IContainer Card(IContainer c) =>
+        c.Border(1).BorderColor(Line).Padding(12);
+
+    private static void KV(ColumnDescriptor c, string label, string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return;
+        c.Item().Row(r =>
+        {
+            r.ConstantItem(85).Text(label).FontColor(Muted);
+            r.RelativeItem().Text(value).SemiBold();
+        });
+    }
+
+    private static void SumRow(ColumnDescriptor c, string label, string value, bool bold = false)
+    {
+        c.Item().Row(r =>
+        {
+            var l = r.RelativeItem().Text(label);
+            var v = r.ConstantItem(110).AlignRight().Text(value);
+            if (bold) { l.SemiBold(); v.Bold(); }
+        });
+    }
+
+    private static IContainer HeadCell(IContainer c) =>
+        c.Background(Primary).PaddingVertical(6).PaddingHorizontal(6)
+         .DefaultTextStyle(x => x.FontColor(Colors.White).SemiBold().FontSize(8.5f));
+
+    private static IContainer Body(IContainer c, bool alt) =>
+        c.Background(alt ? Light : Colors.White)
+         .BorderBottom(0.5f).BorderColor(Line)
+         .PaddingVertical(5).PaddingHorizontal(6);
+
+    private static IContainer TotalCell(IContainer c) =>
+        c.Background(Light).BorderTop(1.25f).BorderColor(Primary)
+         .PaddingVertical(6).PaddingHorizontal(6)
+         .DefaultTextStyle(x => x.Bold());
 }
