@@ -1,4 +1,5 @@
 using ClothStockSystem.Forms.Auth;
+using ClothStockSystem.Forms.Dashboard;
 using ClothStockSystem.Forms.Expenses;
 using ClothStockSystem.Forms.Finance;
 using ClothStockSystem.Forms.Orders;
@@ -23,6 +24,9 @@ public partial class MainForm : Form
         InitializeComponent();
         ApplyPermissions();
         BuildUserPanel();
+
+        // Program khulte hi Dashboard (sirf Owner ke liye)
+        Shown += (s, e) => { if (SessionManager.IsOwner) OpenForm(new DashboardForm(), btnDashboard); };
     }
 
     // Seller ko sirf Stock View, Online Order, Returns
@@ -31,7 +35,7 @@ public partial class MainForm : Form
         var owner = SessionManager.IsOwner;
         foreach (var b in new[]
         {
-            btnArticles, btnColors, btnStockIn, btnPurchase, btnStockAdjust, btnShopSale, btnAllSales,
+            btnDashboard, btnArticles, btnColors, btnStockIn, btnPurchase, btnStockAdjust, btnShopSale, btnAllSales,
             btnProfit, btnReports, btnExpenses, btnWorkers, btnExpSetup,
             btnLedger, btnCashBook, btnParties, btnCouriers, btnSettings
         })
@@ -166,6 +170,7 @@ public partial class MainForm : Form
     // Online Order form ka Return button yahi bulata hai
     public void OpenReturns() => OpenForm(new OrderReturnForm(), btnReturns);
 
+    private void btnDashboard_Click(object? sender, EventArgs e) => OpenForm(new DashboardForm(), btnDashboard);
     private void btnArticles_Click(object? sender, EventArgs e) => OpenForm(new ArticleForm(), btnArticles);
     private void btnColors_Click(object? sender, EventArgs e) => OpenForm(new ColorForm(), btnColors);
     private void btnStockIn_Click(object? sender, EventArgs e) => OpenForm(new StockInForm(), btnStockIn);

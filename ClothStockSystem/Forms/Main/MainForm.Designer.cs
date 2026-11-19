@@ -33,6 +33,8 @@
             pnlMenu = new Panel();
             lblTitle = new Label();
 
+            btnDashboard = new Button();
+
             btnGrpManage = new Button(); pnlSubManage = new Panel();
             btnGrpSales = new Button(); pnlSubSales = new Panel();
             btnGrpMoney = new Button(); pnlSubMoney = new Panel();
@@ -82,7 +84,7 @@
             SuspendLayout();
             // 
             // pnlMenu (Dock Top: ulte order mein add hote hain)
-            // Upar se neeche: Title, Inventory, Sales & Delivery, Purchase & Expenses, Accounts, Reports, Settings
+            // Upar se neeche: Title, Dashboard, Inventory, Sales & Delivery, Purchase & Expenses, Accounts, Reports, Settings
             // 
             pnlMenu.AutoScroll = true;
             pnlMenu.BackColor = ClrSidebar;
@@ -96,6 +98,7 @@
             pnlMenu.Controls.Add(btnGrpSales);
             pnlMenu.Controls.Add(pnlSubManage);
             pnlMenu.Controls.Add(btnGrpManage);
+            pnlMenu.Controls.Add(btnDashboard);
             pnlMenu.Controls.Add(lblTitle);
             pnlMenu.Dock = DockStyle.Left;
             pnlMenu.Name = "pnlMenu";
@@ -136,6 +139,11 @@
                     new System.Drawing.Point((int)(73 * k), (int)(44 * k)), ClrTextLight,
                     TextFormatFlags.NoPadding);
             };
+            // 
+            // Dashboard (main button, sab groups se upar)
+            // 
+            StyleMenuButton(btnDashboard, "btnDashboard", "Dashboard", 0, "\uE80F");
+            btnDashboard.Click += btnDashboard_Click;
             // 
             // Group 1: Inventory (setup + stock dekhna/theek karna)
             // 
@@ -237,7 +245,7 @@
                 SetGroupText(g.Header, g.Title, false);
             }
             // Active (selected) button highlight
-            foreach (var b in new[] { btnArticles, btnColors, btnStockIn, btnPurchase, btnPurchaseList, btnStockView,
+            foreach (var b in new[] { btnDashboard, btnArticles, btnColors, btnStockIn, btnPurchase, btnPurchaseList, btnStockView,
                 btnStockAdjust, btnShopSale, btnOnlineOrder, btnAllSales, btnReturns, btnCouriers,
                 btnExpenses, btnExpSetup, btnWorkers, btnProfit, btnLedger, btnCashBook, btnParties,
                 btnReports, btnSettings })
@@ -578,7 +586,7 @@
             AttachIcon(b, false);
         }
 
-        // Main (group ke bahar wale) buttons: Reports, Settings
+        // Main (group ke bahar wale) buttons: Dashboard, Reports, Settings
         private void StyleMenuButton(Button b, string name, string text, int tabIndex, string icon)
         {
             b.AutoEllipsis = true;
@@ -633,6 +641,7 @@
 
         private Panel pnlMenu;
         private Label lblTitle;
+        private Button btnDashboard;
         private Button btnGrpManage;
         private Panel pnlSubManage;
         private Button btnGrpSales;
