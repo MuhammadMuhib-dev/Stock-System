@@ -1,7 +1,4 @@
-﻿using System.Xml.Linq;
-using static System.Net.Mime.MediaTypeNames;
-
-namespace ClothStockSystem.Forms.Stock
+﻿namespace ClothStockSystem.Forms.Stock
 {
     partial class StockViewForm
     {
@@ -20,46 +17,64 @@ namespace ClothStockSystem.Forms.Stock
 
         private void InitializeComponent()
         {
+            // theme colors are LOCAL on purpose: no static fields/methods that could clash
+            // with names already defined in StockViewForm.cs
+            var cWindow = System.Drawing.Color.White;
+            var cBar = System.Drawing.Color.FromArgb(246, 247, 249);
+            var cBorder = System.Drawing.Color.FromArgb(218, 222, 228);
+            var cRule = System.Drawing.Color.FromArgb(234, 237, 241);
+            var cText = System.Drawing.Color.FromArgb(33, 37, 41);
+            var cCaption = System.Drawing.Color.FromArgb(108, 117, 125);
+            var cAccent = System.Drawing.Color.FromArgb(15, 118, 110);
+            var cAccentDk = System.Drawing.Color.FromArgb(11, 92, 86);
+            var cSelect = System.Drawing.Color.FromArgb(214, 236, 233);
+
             components = new System.ComponentModel.Container();
-            DataGridViewCellStyle headerStyle = new DataGridViewCellStyle();
-            DataGridViewCellStyle cellStyle = new DataGridViewCellStyle();
-            DataGridViewCellStyle altStyle = new DataGridViewCellStyle();
             pnlTop = new Panel();
             flowFilters = new FlowLayoutPanel();
+            pnlArticle = new Panel();
             lblArticle = new Label();
             cmbArticle = new ComboBox();
+            pnlView = new Panel();
             lblView = new Label();
             cmbView = new ComboBox();
             chkAlertsOnly = new CheckBox();
             btnRefresh = new Button();
             grid = new DataGridView();
             pnlBottom = new Panel();
+            tlpStatus = new TableLayoutPanel();
             lblSummary = new Label();
             lblLegend = new Label();
             tmrRefresh = new System.Windows.Forms.Timer(components);
             pnlTop.SuspendLayout();
             flowFilters.SuspendLayout();
+            pnlArticle.SuspendLayout();
+            pnlView.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)grid).BeginInit();
             pnlBottom.SuspendLayout();
+            tlpStatus.SuspendLayout();
             SuspendLayout();
             // 
-            // pnlTop
+            // pnlTop (toolbar)
             // 
-            pnlTop.BackColor = System.Drawing.Color.FromArgb(240, 248, 255);
+            pnlTop.BackColor = cWindow;
             pnlTop.Controls.Add(flowFilters);
             pnlTop.Dock = DockStyle.Top;
             pnlTop.Name = "pnlTop";
-            pnlTop.Padding = new Padding(10, 8, 10, 8);
-            pnlTop.Size = new Size(1100, 64);
+            pnlTop.Padding = new Padding(16, 10, 16, 10);
+            pnlTop.Size = new Size(1100, 74);
             pnlTop.TabIndex = 0;
+            pnlTop.Paint += (s, e) =>
+            {
+                using var pen = new System.Drawing.Pen(cBorder);
+                e.Graphics.DrawLine(pen, 0, pnlTop.Height - 1, pnlTop.Width, pnlTop.Height - 1);
+            };
             // 
             // flowFilters
             // 
-            flowFilters.BackColor = System.Drawing.Color.FromArgb(240, 248, 255);
-            flowFilters.Controls.Add(lblArticle);
-            flowFilters.Controls.Add(cmbArticle);
-            flowFilters.Controls.Add(lblView);
-            flowFilters.Controls.Add(cmbView);
+            flowFilters.BackColor = cWindow;
+            flowFilters.Controls.Add(pnlArticle);
+            flowFilters.Controls.Add(pnlView);
             flowFilters.Controls.Add(chkAlertsOnly);
             flowFilters.Controls.Add(btnRefresh);
             flowFilters.Dock = DockStyle.Fill;
@@ -67,51 +82,57 @@ namespace ClothStockSystem.Forms.Stock
             flowFilters.TabIndex = 0;
             flowFilters.WrapContents = false;
             // 
-            // lblArticle
+            // pnlArticle
             // 
-            lblArticle.Anchor = AnchorStyles.Left;
+            pnlArticle.Controls.Add(lblArticle);
+            pnlArticle.Controls.Add(cmbArticle);
+            pnlArticle.Margin = new Padding(0, 0, 20, 0);
+            pnlArticle.Name = "pnlArticle";
+            pnlArticle.Size = new Size(240, 52);
             lblArticle.AutoSize = true;
-            lblArticle.ForeColor = System.Drawing.Color.FromArgb(30, 42, 54);
-            lblArticle.Margin = new Padding(3, 8, 3, 0);
+            lblArticle.Font = new System.Drawing.Font("Segoe UI", 8.5F);
+            lblArticle.ForeColor = cCaption;
+            lblArticle.Location = new Point(0, 0);
             lblArticle.Name = "lblArticle";
-            lblArticle.Text = "Article:";
-            // 
-            // cmbArticle
-            // 
-            cmbArticle.BackColor = System.Drawing.Color.White;
+            lblArticle.Text = "Article";
             cmbArticle.DropDownStyle = ComboBoxStyle.DropDownList;
-            cmbArticle.FlatStyle = FlatStyle.Flat;
-            cmbArticle.ForeColor = System.Drawing.Color.FromArgb(30, 42, 54);
+            cmbArticle.Font = new System.Drawing.Font("Segoe UI", 10F);
+            cmbArticle.ForeColor = cText;
+            cmbArticle.Location = new Point(0, 20);
             cmbArticle.Name = "cmbArticle";
-            cmbArticle.Size = new Size(220, 33);
+            cmbArticle.Size = new Size(240, 25);
             cmbArticle.TabIndex = 1;
             cmbArticle.SelectedIndexChanged += Filter_Changed;
             // 
-            // lblView
+            // pnlView
             // 
+            pnlView.Controls.Add(lblView);
+            pnlView.Controls.Add(cmbView);
+            pnlView.Margin = new Padding(0, 0, 24, 0);
+            pnlView.Name = "pnlView";
+            pnlView.Size = new Size(200, 52);
             lblView.AutoSize = true;
-            lblView.ForeColor = System.Drawing.Color.FromArgb(30, 42, 54);
-            lblView.Margin = new Padding(20, 8, 3, 0);
+            lblView.Font = new System.Drawing.Font("Segoe UI", 8.5F);
+            lblView.ForeColor = cCaption;
+            lblView.Location = new Point(0, 0);
             lblView.Name = "lblView";
-            lblView.Text = "View:";
-            // 
-            // cmbView
-            // 
-            cmbView.BackColor = System.Drawing.Color.White;
+            lblView.Text = "View";
             cmbView.DropDownStyle = ComboBoxStyle.DropDownList;
-            cmbView.FlatStyle = FlatStyle.Flat;
-            cmbView.ForeColor = System.Drawing.Color.FromArgb(30, 42, 54);
+            cmbView.Font = new System.Drawing.Font("Segoe UI", 10F);
+            cmbView.ForeColor = cText;
+            cmbView.Location = new Point(0, 20);
             cmbView.Name = "cmbView";
-            cmbView.Size = new Size(180, 33);
+            cmbView.Size = new Size(200, 25);
             cmbView.TabIndex = 2;
             cmbView.SelectedIndexChanged += Filter_Changed;
             // 
             // chkAlertsOnly
             // 
             chkAlertsOnly.AutoSize = true;
-            chkAlertsOnly.BackColor = System.Drawing.Color.FromArgb(240, 248, 255);
-            chkAlertsOnly.ForeColor = System.Drawing.Color.FromArgb(30, 42, 54);
-            chkAlertsOnly.Margin = new Padding(20, 6, 3, 0);
+            chkAlertsOnly.BackColor = cWindow;
+            chkAlertsOnly.Font = new System.Drawing.Font("Segoe UI", 9.5F);
+            chkAlertsOnly.ForeColor = cText;
+            chkAlertsOnly.Margin = new Padding(0, 22, 24, 0);
             chkAlertsOnly.Name = "chkAlertsOnly";
             chkAlertsOnly.TabIndex = 3;
             chkAlertsOnly.Text = "Alerts only";
@@ -120,16 +141,17 @@ namespace ClothStockSystem.Forms.Stock
             // 
             // btnRefresh
             // 
-            btnRefresh.BackColor = System.Drawing.Color.FromArgb(79, 163, 224);
+            btnRefresh.BackColor = cAccent;
             btnRefresh.Cursor = Cursors.Hand;
             btnRefresh.FlatAppearance.BorderSize = 0;
-            btnRefresh.FlatAppearance.MouseOverBackColor = System.Drawing.Color.FromArgb(59, 143, 204);
+            btnRefresh.FlatAppearance.MouseOverBackColor = cAccentDk;
+            btnRefresh.FlatAppearance.MouseDownBackColor = cAccentDk;
             btnRefresh.FlatStyle = FlatStyle.Flat;
-            btnRefresh.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
+            btnRefresh.Font = new System.Drawing.Font("Segoe UI Semibold", 9.5F);
             btnRefresh.ForeColor = System.Drawing.Color.White;
-            btnRefresh.Margin = new Padding(20, 0, 3, 3);
+            btnRefresh.Margin = new Padding(0, 19, 0, 0);
             btnRefresh.Name = "btnRefresh";
-            btnRefresh.Size = new Size(120, 36);
+            btnRefresh.Size = new Size(100, 29);
             btnRefresh.TabIndex = 4;
             btnRefresh.Text = "Refresh";
             btnRefresh.UseVisualStyleBackColor = false;
@@ -141,31 +163,35 @@ namespace ClothStockSystem.Forms.Stock
             grid.AllowUserToDeleteRows = false;
             grid.AllowUserToResizeRows = false;
             grid.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-            grid.BackgroundColor = System.Drawing.Color.White;
+            grid.BackgroundColor = cWindow;
             grid.BorderStyle = BorderStyle.None;
             grid.CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal;
-            grid.ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.None;
-            headerStyle.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            headerStyle.BackColor = System.Drawing.Color.FromArgb(79, 163, 224);
-            headerStyle.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
-            headerStyle.ForeColor = System.Drawing.Color.White;
-            headerStyle.SelectionBackColor = System.Drawing.Color.FromArgb(79, 163, 224);
-            headerStyle.SelectionForeColor = System.Drawing.Color.White;
-            headerStyle.WrapMode = DataGridViewTriState.False;
-            grid.ColumnHeadersDefaultCellStyle = headerStyle;
-            grid.ColumnHeadersHeight = 36;
+            grid.ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.Single;
+            grid.ColumnHeadersDefaultCellStyle = new DataGridViewCellStyle
+            {
+                Alignment = DataGridViewContentAlignment.MiddleLeft,
+                BackColor = cBar,
+                Font = new System.Drawing.Font("Segoe UI Semibold", 9F),
+                ForeColor = cText,
+                Padding = new Padding(8, 0, 0, 0),
+                SelectionBackColor = cBar,
+                SelectionForeColor = cText,
+                WrapMode = DataGridViewTriState.False
+            };
+            grid.ColumnHeadersHeight = 34;
             grid.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
-            cellStyle.BackColor = System.Drawing.Color.White;
-            cellStyle.ForeColor = System.Drawing.Color.FromArgb(30, 42, 54);
-            cellStyle.Padding = new Padding(4, 0, 4, 0);
-            cellStyle.SelectionBackColor = System.Drawing.Color.FromArgb(207, 232, 250);
-            cellStyle.SelectionForeColor = System.Drawing.Color.FromArgb(30, 42, 54);
-            grid.DefaultCellStyle = cellStyle;
-            altStyle.BackColor = System.Drawing.Color.FromArgb(247, 251, 255);
-            grid.AlternatingRowsDefaultCellStyle = altStyle;
+            grid.DefaultCellStyle = new DataGridViewCellStyle
+            {
+                BackColor = cWindow,
+                Font = new System.Drawing.Font("Segoe UI", 9.5F),
+                ForeColor = cText,
+                Padding = new Padding(8, 0, 4, 0),
+                SelectionBackColor = cSelect,
+                SelectionForeColor = cText
+            };
             grid.Dock = DockStyle.Fill;
             grid.EnableHeadersVisualStyles = false;
-            grid.GridColor = System.Drawing.Color.FromArgb(227, 238, 247);
+            grid.GridColor = cRule;
             grid.MultiSelect = false;
             grid.Name = "grid";
             grid.ReadOnly = true;
@@ -176,30 +202,45 @@ namespace ClothStockSystem.Forms.Stock
             grid.TabIndex = 5;
             grid.DataBindingComplete += grid_DataBindingComplete;
             // 
-            // pnlBottom
+            // pnlBottom (status bar)
             // 
-            pnlBottom.BackColor = System.Drawing.Color.FromArgb(240, 248, 255);
-            pnlBottom.Controls.Add(lblSummary);
-            pnlBottom.Controls.Add(lblLegend);
+            pnlBottom.BackColor = cBar;
+            pnlBottom.Controls.Add(tlpStatus);
             pnlBottom.Dock = DockStyle.Bottom;
             pnlBottom.Name = "pnlBottom";
-            pnlBottom.Size = new Size(1100, 80);
+            pnlBottom.Size = new Size(1100, 40);
             pnlBottom.TabIndex = 6;
+            pnlBottom.Paint += (s, e) =>
+            {
+                using var pen = new System.Drawing.Pen(cBorder);
+                e.Graphics.DrawLine(pen, 0, 0, pnlBottom.Width, 0);
+            };
+            tlpStatus.ColumnCount = 2;
+            tlpStatus.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            tlpStatus.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+            tlpStatus.Controls.Add(lblSummary, 0, 0);
+            tlpStatus.Controls.Add(lblLegend, 1, 0);
+            tlpStatus.Dock = DockStyle.Fill;
+            tlpStatus.Name = "tlpStatus";
+            tlpStatus.Padding = new Padding(16, 0, 16, 0);
+            tlpStatus.RowCount = 1;
+            tlpStatus.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
             // 
             // lblSummary
             // 
+            lblSummary.Anchor = AnchorStyles.Left;
             lblSummary.AutoSize = true;
-            lblSummary.Font = new System.Drawing.Font("Segoe UI", 11F, System.Drawing.FontStyle.Bold);
-            lblSummary.ForeColor = System.Drawing.Color.FromArgb(30, 42, 54);
-            lblSummary.Location = new Point(12, 10);
+            lblSummary.Font = new System.Drawing.Font("Segoe UI Semibold", 10F);
+            lblSummary.ForeColor = cText;
             lblSummary.Name = "lblSummary";
             lblSummary.Text = "Total: 0";
             // 
             // lblLegend
             // 
+            lblLegend.Anchor = AnchorStyles.Right;
             lblLegend.AutoSize = true;
-            lblLegend.ForeColor = System.Drawing.Color.FromArgb(107, 124, 140);
-            lblLegend.Location = new Point(12, 46);
+            lblLegend.Font = new System.Drawing.Font("Segoe UI", 9F);
+            lblLegend.ForeColor = cCaption;
             lblLegend.Name = "lblLegend";
             lblLegend.Text = "Red = low stock, Orange = old stock";
             // 
@@ -209,24 +250,30 @@ namespace ClothStockSystem.Forms.Stock
             // 
             // StockViewForm
             // 
-            AutoScaleDimensions = new SizeF(10F, 25F);
-            AutoScaleMode = AutoScaleMode.Font;
-            BackColor = System.Drawing.Color.White;
-            ClientSize = new Size(1100, 640);
+            AutoScaleDimensions = new SizeF(96F, 96F);
+            AutoScaleMode = AutoScaleMode.Dpi;
+            BackColor = cWindow;
+            ClientSize = new Size(1100, 680);
             Controls.Add(grid);
             Controls.Add(pnlBottom);
             Controls.Add(pnlTop);
-            MinimumSize = new Size(900, 500);
+            Font = new System.Drawing.Font("Segoe UI", 9F);
+            MinimumSize = new Size(900, 520);
             Name = "StockViewForm";
             StartPosition = FormStartPosition.CenterScreen;
             Text = "Stock View";
             Load += StockViewForm_Load;
-            pnlTop.ResumeLayout(false);
+            pnlArticle.ResumeLayout(false);
+            pnlArticle.PerformLayout();
+            pnlView.ResumeLayout(false);
+            pnlView.PerformLayout();
             flowFilters.ResumeLayout(false);
             flowFilters.PerformLayout();
+            pnlTop.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)grid).EndInit();
+            tlpStatus.ResumeLayout(false);
+            tlpStatus.PerformLayout();
             pnlBottom.ResumeLayout(false);
-            pnlBottom.PerformLayout();
             ResumeLayout(false);
         }
 
@@ -234,6 +281,8 @@ namespace ClothStockSystem.Forms.Stock
 
         private Panel pnlTop;
         private FlowLayoutPanel flowFilters;
+        private Panel pnlArticle;
+        private Panel pnlView;
         private Label lblArticle;
         private ComboBox cmbArticle;
         private Label lblView;
@@ -242,6 +291,7 @@ namespace ClothStockSystem.Forms.Stock
         private Button btnRefresh;
         private DataGridView grid;
         private Panel pnlBottom;
+        private TableLayoutPanel tlpStatus;
         private Label lblSummary;
         private Label lblLegend;
         private System.Windows.Forms.Timer tmrRefresh;
